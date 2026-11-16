@@ -1,0 +1,136 @@
+---
+title: "Getting started with glasses3"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with glasses3}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4)
+```
+
+The Tobii Pro Glasses 3 save each recording as a folder on the SD card. Inside are the [scene video]{.hl}, a [metadata file]{.hl} called `recording.g3` and three gzipped JSON files with one record per line: `gazedata.gz`, `imudata.gz` and `eventdata.gz`. glasses3 reads these files directly, without going through Tobii Pro Lab. The data come back as [tibbles]{.hl}, so this guide also loads dplyr to work with them.
+
+```{r}
+library(glasses3)
+library(dplyr, warn.conflicts = FALSE)
+```
+
+## Reading a recording
+
+`read_g3()` takes the path to a recording folder. The package includes the first 30 seconds of a recording, with the identifying metadata replaced by placeholders.
+
+```{r}
+rec <- read_g3(g3_example())
+rec
+```
+
+The result is a list with the metadata and a tibble for each stream. The [gaze data]{.hl} have one row per sample. Samples where the glasses lost the eyes keep their row, with `NA` values.
+
+```{r}
+names(rec$gaze)
+summary(rec)
+```
+
+The [`valid` column]{.hl} says whether a sample has a gaze point. The glasses can estimate gaze from one eye, so a sample can be valid while one of `valid_left` and `valid_right` is `FALSE`.
+
+## Several recordings
+
+`list_g3_recordings()` searches a folder, such as the root of an SD card, and lists every recording it finds with its name, participant, start time and duration. The readers `read_g3_gaze()`, `read_g3_imu()` and `read_g3_events()` accept this list, or a vector of paths, and stack the recordings into one tibble. The [`recording` column]{.hl} says which folder each row comes from.
+
+```{r}
+recordings <- list_g3_recordings(dirname(g3_example()))
+recordings
+gaze <- read_g3_gaze(recordings)
+events <- read_g3_events(recordings)
+```
+
+The functions for sync port pulses and epochs below work on such data too. They match the samples of each recording to that recording's pulses, and the plots draw one panel per recording.
+
+## Pupil diameter
+
+```{r}
+plot_g3_pupil(rec)
+```
+
+The grey areas mark [sync port pulses]{.hl}. The sync port connects the glasses to other equipment. A stimulus computer can send a pulse at each stimulus onset, or the glasses can send pulses that another device records. `g3_syncport()` lists the pulses with their onsets and offsets.
+
+```{r}
+g3_syncport(rec$events)
+```
+
+`g3_add_syncport()` keeps every sample and adds the sync port state, the number of the most recent pulse and the time since its onset. This suits models of the whole recording, where cutting epochs would drop the samples between pulses.
+
+```{r}
+tagged <- g3_add_syncport(rec$gaze, rec$events)
+tagged |>
+  filter(syncport == 1) |>
+  select(time, pulse, pulse_time)
+```
+
+Long recordings are hard to read at 50 samples per second. The `smooth` argument draws a [running median]{.hl} over the raw trace, here one second wide. Short blinks do not pull it down, and the data themselves are not changed.
+
+```{r}
+plot_g3_pupil(rec, smooth = 1)
+```
+
+## Epochs
+
+`g3_epochs()` cuts the samples into [epochs]{.hl} around each pulse onset and adds the time relative to the onset. After `g3_pupil_long()`, there is one row per sample and eye, which suits ggplot2 and mixed-effects models.
+
+```{r}
+ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5)
+pupil <- g3_pupil_long(ep)
+head(pupil)
+```
+
+Given epochs, `plot_g3_pupil()` puts the time from the pulse onset on the x axis. Each eye gets its own panel, with a thin line per pulse and the mean drawn on top.
+
+```{r}
+plot_g3_pupil(ep)
+```
+
+For models of the whole time course, such as generalised additive mixed models, `g3_downsample()` averages the samples into [time bins]{.hl}. Bins are counted from the pulse onset, and a bin where more than half of the samples are missing is left empty. Character columns, such as a participant or condition label, are dropped unless you name them in `by`, and the groups of a grouped tibble are kept.
+
+```{r}
+binned <- g3_downsample(pupil, bin = 0.1)
+head(binned)
+```
+
+glasses3 leaves [pupil preprocessing]{.hl} to other packages. PupillometryR, gazer and eyeris handle blink removal, interpolation and baseline correction.
+
+## Gaze position
+
+`plot_g3_gaze()` shows where the wearer looked in the scene camera image. The top of the plot is the top of the video frame.
+
+```{r, fig.height = 4}
+plot_g3_gaze(rec)
+```
+
+`g3_gaze_angles()` turns the gaze direction of each eye into [azimuth]{.hl} and [elevation]{.hl} in degrees, relative to straight ahead of the glasses, and adds the [vergence]{.hl} angle between the eyes. Angular velocity for detecting fixations and saccades can be computed from these columns.
+
+```{r}
+angles <- g3_gaze_angles(rec$gaze)
+angles |>
+  select(left_azimuth, left_elevation, vergence) |>
+  summary()
+```
+
+## Damaged files and gaps
+
+A file that was cut off, for example by an interrupted copy from the SD card, is still read. The readers skip the damaged lines, return the intact samples and give a warning that names the skipped lines. A file whose compressed data are damaged cannot be read and gives an error. `g3_fill_gaps()` then inserts empty rows where samples are missing, so the time series is evenly spaced again before preprocessing.
+
+```{r}
+filled <- g3_fill_gaps(rec$gaze)
+count(filled, inserted)
+```
+
+## IMU data
+
+The glasses sample the accelerometer and gyroscope together, while the magnetometer runs separately at a lower rate. Each row of the [IMU data]{.hl} therefore has missing values for the sensors that were not sampled at that moment.
+
+```{r}
+head(rec$imu)
+```

@@ -1,0 +1,62 @@
+url: https://mcanzi.de/glasses3/
+
+template:
+  bootstrap: 5
+  theme: a11y-dark
+  bslib:
+    bg: "#0b110e"
+    fg: "#e3e8e1"
+    primary: "#72c699"
+    secondary: "#8e9e96"
+    link-color: "#72c699"
+    link-hover-color: "#95d5b2"
+    code-color: "#f2d45c"
+    border-color: "#24332c"
+    navbar-bg: "#0b110e"
+    base_font: "Atkinson Hyperlegible"
+    heading_font: "Bricolage Grotesque"
+    code_font: "JetBrains Mono"
+  includes:
+    in_header: <link rel="stylesheet" href="https://mcanzi.de/fonts/fonts.css">
+
+navbar:
+  structure:
+    left: [intro, reference, news]
+    right: [search, website, github]
+  components:
+    website:
+      text: mcanzi.de
+      href: https://mcanzi.de/
+      aria-label: Massimiliano Canzi's website
+
+reference:
+- title: Reading recordings
+  contents:
+  - read_g3
+  - read_g3_gaze
+  - read_g3_imu
+  - read_g3_events
+  - read_g3_info
+  - list_g3_recordings
+- title: Sync port and epochs
+  contents:
+  - g3_syncport
+  - g3_add_syncport
+  - g3_epochs
+  - g3_pupil_long
+- title: Processing
+  contents:
+  - g3_fill_gaps
+  - g3_gaze_angles
+  - g3_downsample
+- title: Plots
+  contents:
+  - plot_g3_pupil
+  - plot_g3_gaze
+  - theme_g3
+- title: Example data
+  contents:
+  - g3_example
+- title: Package
+  contents:
+  - glasses3-package
