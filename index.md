@@ -1,0 +1,90 @@
+# glasses3
+
+[![R-CMD-check](https://github.com/mcanzi/glasses3/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mcanzi/glasses3/actions/workflows/R-CMD-check.yaml)
+
+glasses3 reads recordings from the Tobii Pro Glasses 3 wearable eye
+tracker into R. It works on the recording folder as it comes off the SD
+card, so Tobii Pro Lab is not needed.
+
+The glasses store each data stream as gzipped JSON with one record per
+line (`gazedata.gz`, `imudata.gz` and `eventdata.gz`). glasses3 turns
+gaze, pupil diameter, IMU and sync port data into tibbles and reads the
+recording metadata. Samples are matched to sync port pulses, so the data
+can be cut into epochs around stimuli. Plots show pupil diameter over
+time and gaze position in the scene camera image.
+
+## Installation
+
+glasses3 is on GitHub only for now. Install it with:
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("mcanzi/glasses3")
+```
+
+## Usage
+
+``` r
+
+library(glasses3)
+
+rec <- read_g3("path/to/recording")
+rec
+summary(rec)
+
+plot_g3_pupil(rec)
+plot_g3_gaze(rec, type = "density")
+
+epochs <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5)
+plot_g3_pupil(epochs)
+pupil <- g3_pupil_long(epochs)
+binned <- g3_downsample(pupil, bin = 0.1)
+
+gaze <- g3_gaze_angles(rec$gaze)
+```
+
+The package comes with a 30-second example recording, found with
+[`g3_example()`](https://mcanzi.de/glasses3/reference/g3_example.md).
+
+### Several recordings
+
+[`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md)
+finds every recording on an SD card or in any other folder. Pass its
+output to a reader and you get one tibble for all of them, with a
+`recording` column naming the folder each row comes from. The sync port
+functions match each recording to its own pulses, and the plots get one
+panel per recording.
+
+``` r
+
+recordings <- list_g3_recordings("path/to/sdcard")
+
+gaze <- read_g3_gaze(recordings)
+events <- read_g3_events(recordings)
+
+epochs <- g3_epochs(gaze, events, before = 0.5, after = 5)
+plot_g3_pupil(gaze, events)
+```
+
+The data come back as tibbles, so they work directly with dplyr and
+ggplot2, and grouped tibbles keep their groups.
+
+## Scope
+
+glasses3 reads and organises the data. Lines that cannot be read, such
+as the cut-off end of an incomplete file, are skipped with a warning,
+and
+[`g3_fill_gaps()`](https://mcanzi.de/glasses3/reference/g3_fill_gaps.md)
+puts empty rows in their place.
+[`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+averages the samples into time bins, for example before fitting
+generalised additive mixed models. The package leaves pupil
+preprocessing to other packages. Blink removal, interpolation and
+baseline correction are available in packages such as
+[PupillometryR](https://CRAN.R-project.org/package=PupillometryR),
+[gazer](https://github.com/dmirman/gazer) or
+[eyeris](https://CRAN.R-project.org/package=eyeris).
+
+Tobii is a trademark of Tobii AB. glasses3 is not affiliated with or
+endorsed by Tobii.
