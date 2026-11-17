@@ -1,22 +1,22 @@
-/* The forest theme of mcanzi.de (themes/arang/static/css/site.css in mcanzi/personal_website). */
+/* The doglord theme of mcanzi.de: the colours of the Resonance cover, with its fly agarics in the background. */
 
 :root {
-  --floor: #0b110e;
-  --understory: #111a16;
-  --raised: #17221d;
-  --vine: #24332c;
-  --mist: #e3e8e1;
-  --muted: #8e9e96;
-  --pandan: #72c699;
-  --primary-hi: #95d5b2;
-  --hornbill: #f2d45c;
-  --kingfisher: #72c699;
-  --orchid: #c3b6d6;
-  --title-top: #ece07e;
-  --title-bottom: #5cc48a;
-  --nav-bg: rgba(11, 17, 14, 0.9);
-  --glow-1: rgba(220, 230, 225, 0.08);
-  --glow-2: rgba(136, 201, 168, 0.04);
+  --floor: #121310;
+  --understory: #191b17;
+  --raised: #21241e;
+  --vine: #343a2e;
+  --mist: #ebe2cd;
+  --muted: #a69d89;
+  --pandan: #a06ae6;
+  --primary-hi: #b688ee;
+  --hornbill: #d5813f;
+  --kingfisher: #aac6cf;
+  --orchid: #cf6a80;
+  --title-top: #dc7286;
+  --title-bottom: #9358e0;
+  --nav-bg: rgba(18, 19, 16, 0.9);
+  --glow-1: rgba(104, 128, 146, 0.12);
+  --glow-2: rgba(147, 88, 224, 0.07);
   color-scheme: dark;
 }
 
@@ -39,9 +39,8 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: url("https://mcanzi.de/img/motifs/rafflesia.svg") repeat 0 0 / 640px 640px;
-  opacity: 0.2;
-  filter: saturate(0.55) brightness(0.85);
+  background: url("toadstools.svg") repeat 0 0 / 560px 560px;
+  opacity: 0.1;
 }
 body::after {
   content: "";
