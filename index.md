@@ -15,12 +15,11 @@ time and gaze position in the scene camera image.
 
 ## Installation
 
-glasses3 is on GitHub only for now. Install it with:
+glasses3 is not on CRAN yet. Install it from R-universe:
 
 ``` r
 
-# install.packages("remotes")
-remotes::install_github("mcanzi/glasses3")
+install.packages("glasses3", repos = c("https://mcanzi.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
 ## Usage
