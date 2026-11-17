@@ -148,9 +148,12 @@ azimuth <- function(x, z) degrees(atan2(-x, z))
 elevation <- function(x, y, z) degrees(atan2(y, sqrt(x^2 + z^2)))
 
 vergence <- function(lx, ly, lz, rx, ry, rz) {
-  cosang <- (lx * rx + ly * ry + lz * rz) /
-    (sqrt(lx^2 + ly^2 + lz^2) * sqrt(rx^2 + ry^2 + rz^2))
-  cosang |> pmax(-1) |> pmin(1) |> acos() |> degrees()
+  # atan2(|l x r|, l . r) stays accurate for small angles, where acos() of
+  # the cosine loses precision (1e-16 rounding gives ~1e-6 degrees).
+  cx <- ly * rz - lz * ry
+  cy <- lz * rx - lx * rz
+  cz <- lx * ry - ly * rx
+  degrees(atan2(sqrt(cx^2 + cy^2 + cz^2), lx * rx + ly * ry + lz * rz))
 }
 
 #' Downsample to fixed time bins
