@@ -38,9 +38,10 @@ reference:
   - read_g3_events
   - read_g3_info
   - list_g3_recordings
-- title: Sync port and epochs
+- title: Events and epochs
   contents:
   - g3_syncport
+  - g3_api_events
   - g3_add_syncport
   - g3_epochs
   - g3_pupil_long
@@ -48,6 +49,8 @@ reference:
   contents:
   - g3_fill_gaps
   - g3_gaze_angles
+  - g3_gaze_velocity
+  - g3_add_clock_time
   - g3_downsample
 - title: Plots
   contents:

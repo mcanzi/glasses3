@@ -20,7 +20,7 @@ plot_g3_gaze(
 to dark (late), or \code{"density"} for a 2D histogram.}
 
 \item{from, to}{Time window in seconds. Defaults to all the data. For
-epochs, the window is in seconds from the pulse onset.}
+epochs, the window is in seconds from the onset.}
 
 \item{bins}{Number of bins along the horizontal axis when
 \code{type = "density"}. The vertical axis gets 9/16 as many, so that the bins

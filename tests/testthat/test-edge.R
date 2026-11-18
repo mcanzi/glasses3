@@ -9,28 +9,29 @@ test_that("NA in the recording column is kept as its own recording", {
   filled <- g3_fill_gaps(gaze)
   expect_equal(sum(!filled$inserted), nrow(gaze))
   expect_equal(sum(is.na(filled$recording)), sum(filled$recording %in% "rec_a"))
-  p <- g3_syncport(events)
-  expect_equal(nrow(p), 2 * nrow(g3_syncport(one_events)))
+  p <- g3_syncport(events, "out")
+  expect_equal(nrow(p), 2 * nrow(g3_syncport(one_events, "out")))
   expect_equal(sum(is.na(p$recording)), nrow(p) / 2)
-  tagged <- g3_add_syncport(gaze, events)
+  tagged <- g3_add_syncport(gaze, events, "out")
   expect_equal(nrow(tagged), nrow(gaze))
   expect_equal(tagged$pulse[is.na(tagged$recording)], tagged$pulse[tagged$recording %in% "rec_a"])
-  ep <- g3_epochs(gaze, events, after = 1)
-  expect_equal(nrow(ep), 2 * nrow(g3_epochs(one_gaze, one_events, after = 1)))
+  ep <- g3_epochs(gaze, events, after = 1, direction = "out")
+  expect_equal(nrow(ep), 2 * nrow(g3_epochs(one_gaze, one_events, after = 1, direction = "out")))
 })
 
 test_that("g3_epochs keeps the samples within the window of each pulse", {
   rec <- read_g3(g3_example())
-  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2)
-  p <- g3_syncport(rec$events)
+  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2, direction = "out")
+  p <- g3_syncport(rec$events, "out")
   manual <- vapply(p$onset, function(o) {
     sum(rec$gaze$time >= o - 0.5 & rec$gaze$time <= o + 2)
   }, integer(1))
   expect_equal(as.vector(table(factor(ep$pulse, levels = p$pulse))), manual)
   expect_true(all(ep$epoch_time >= -0.5 - 1e-9 & ep$epoch_time <= 2 + 1e-9))
   shuffled <- rec$gaze[sample(nrow(rec$gaze)), ]
-  expect_equal(g3_epochs(shuffled, rec$events, before = 0.5, after = 2), ep)
-  some <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2, pulses = c(2, 4))
+  expect_equal(g3_epochs(shuffled, rec$events, before = 0.5, after = 2, direction = "out"), ep)
+  some <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2, direction = "out",
+                    pulses = c(2, 4))
   expect_equal(unique(some$pulse), c(2L, 4L))
 })
 
@@ -50,7 +51,7 @@ test_that("functions accept data without rows", {
   expect_true(all(c("time", "samples", "left_pupil") %in% names(ds)))
   expect_warning(ep <- g3_epochs(gaze, e0), "No events")
   expect_equal(nrow(ep), 0)
-  expect_true(all(c("pulse", "epoch_time") %in% names(ep)))
+  expect_true(all(c("epoch", "epoch_time", "pulse") %in% names(ep)))
 })
 
 test_that("missing timestamps do not break the processing functions", {
@@ -59,7 +60,8 @@ test_that("missing timestamps do not break the processing functions", {
   filled <- g3_fill_gaps(gaze)
   expect_equal(sum(!filled$inserted), nrow(gaze))
   expect_true(is.na(utils::tail(filled$time, 1)))
-  ep <- g3_epochs(gaze, read_g3_events(g3_example()), after = 1)
+  ep <- g3_epochs(gaze, read_g3_events(g3_example()), after = 1, direction = "out")
+  expect_gt(nrow(ep), 0)
   expect_false(anyNA(ep$time))
   expect_true(is.na(glasses3:::sampling_rate(1)))
 })
@@ -126,7 +128,7 @@ test_that("plots work without a recording column and with missing data", {
   events <- rec$events
   events$recording <- NULL
   expect_s3_class(plot_g3_pupil(gaze, events), "ggplot")
-  ep <- g3_epochs(gaze, events, before = 0.2, after = 1)
+  ep <- g3_epochs(gaze, events, before = 0.2, after = 1, direction = "out")
   expect_s3_class(plot_g3_pupil(ep), "ggplot")
   ep$left_pupil <- NA_real_
   ep$right_pupil <- NA_real_
@@ -134,7 +136,9 @@ test_that("plots work without a recording column and with missing data", {
   off <- rec$gaze
   off$gaze2d_x <- 2
   expect_s3_class(plot_g3_gaze(off, type = "density"), "ggplot")
+  grDevices::pdf(NULL)
   shown <- withVisible(plot(rec))
+  grDevices::dev.off()
   expect_false(shown$visible)
   expect_identical(shown$value, rec)
 })

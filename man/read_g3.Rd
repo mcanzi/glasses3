@@ -22,7 +22,8 @@ requested are \code{NULL}.
 Reads a recording folder as written to the SD card by the Tobii Pro
 Glasses 3. The folder contains \code{recording.g3}, \code{gazedata.gz},
 \code{imudata.gz}, \code{eventdata.gz} and a \code{meta} folder. The scene video is not
-needed.
+needed. All readers take the names of the data files from \code{recording.g3},
+and use these usual names if it does not give them.
 }
 \details{
 \code{read_g3()} reads one recording. To read several recordings into one data
@@ -35,7 +36,7 @@ rec <- read_g3(path)
 rec
 summary(rec)
 rec$gaze
-plot(rec)
+plot(rec, direction = "out")
 }
 \seealso{
 \code{\link[=list_g3_recordings]{list_g3_recordings()}} to find recordings on an SD card.

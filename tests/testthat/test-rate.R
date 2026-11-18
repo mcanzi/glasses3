@@ -26,8 +26,8 @@ for (rate in c(50, 100)) {
 
   test_that(sprintf("epochs of a %d Hz recording have the expected length", rate), {
     ep <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 0.5)
-    expect_equal(length(unique(ep$pulse)), 10)
-    expect_true(all(table(ep$pulse) == 0.7 * rate))
+    expect_equal(length(unique(ep$epoch)), 10)
+    expect_true(all(table(ep$epoch) == 0.7 * rate))
     expect_true(all(ep$epoch_time >= -0.2 & ep$epoch_time <= 0.5))
     expect_equal(nrow(g3_pupil_long(ep)), 2 * nrow(ep))
   })
@@ -55,6 +55,6 @@ test_that("50 Hz and 100 Hz recordings can be read together", {
   expect_equal(as.vector(table(gaze$recording)[c("rec_50", "rec_100")]), c(500, 1000))
   ev <- read_g3_events(recs)
   ep <- g3_epochs(gaze, ev, before = 0, after = 0.5)
-  per_epoch <- tapply(ep$pulse, ep$recording, function(p) unique(table(p)))
+  per_epoch <- tapply(ep$epoch, ep$recording, function(p) unique(table(p)))
   expect_equal(as.vector(per_epoch[c("rec_50", "rec_100")]), c(25, 50))
 })

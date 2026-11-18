@@ -6,7 +6,7 @@
 
 ## Test environments
 
-* local Ubuntu 24.04, R 4.3.3
+* local macOS, R 4.6.2
 * GitHub Actions: macOS (release), Windows (release), Ubuntu (devel, release, oldrel-1)
 
 ## Notes

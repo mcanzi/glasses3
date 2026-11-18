@@ -88,11 +88,18 @@ pluck_vec <- function(x, name, prefix, suffix = c("x", "y", "z")) {
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-resolve_file <- function(path, file) {
-  if (dir.exists(path)) {
-    return(file.path(path, file))
+resolve_file <- function(path, stream, default) {
+  if (!dir.exists(path)) {
+    return(path)
   }
-  path
+  rec_file <- file.path(path, "recording.g3")
+  name <- if (file.exists(rec_file)) {
+    rec_file |> jsonlite::fromJSON(simplifyVector = FALSE) |> purrr::pluck(stream, "file")
+  }
+  if (!is.character(name) || length(name) != 1L) {
+    name <- default
+  }
+  file.path(path, name)
 }
 
 is_number <- function(x) {

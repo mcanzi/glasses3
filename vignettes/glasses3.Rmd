@@ -11,6 +11,14 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 4)
 ```
 
+```{css, echo = FALSE}
+.hl {
+  background: rgba(242, 145, 122, 0.25);
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+```
+
 The Tobii Pro Glasses 3 save each recording as a folder on the SD card. Inside are the [scene video]{.hl}, a [metadata file]{.hl} called `recording.g3` and three gzipped JSON files with one record per line: `gazedata.gz`, `imudata.gz` and `eventdata.gz`. glasses3 reads these files directly, without going through Tobii Pro Lab. The data come back as [tibbles]{.hl}, so this guide also loads dplyr to work with them.
 
 ```{r}
@@ -51,20 +59,22 @@ The functions for sync port pulses and epochs below work on such data too. They 
 
 ## Pupil diameter
 
+The sync port connects the glasses to other equipment. A stimulus computer can send a pulse at each stimulus onset, which the glasses record with the [direction]{.hl} `"in"`. The glasses can also send pulses that another device records, with the direction `"out"`. The functions use `"in"` by default. The example recording only holds pulses sent by the glasses, so the examples here use `direction = "out"`.
+
 ```{r}
-plot_g3_pupil(rec)
+plot_g3_pupil(rec, direction = "out")
 ```
 
-The grey areas mark [sync port pulses]{.hl}. The sync port connects the glasses to other equipment. A stimulus computer can send a pulse at each stimulus onset, or the glasses can send pulses that another device records. `g3_syncport()` lists the pulses with their onsets and offsets.
+The grey areas mark the [sync port pulses]{.hl}. `g3_syncport()` lists them with their onsets and offsets.
 
 ```{r}
-g3_syncport(rec$events)
+g3_syncport(rec$events, direction = "out")
 ```
 
 `g3_add_syncport()` keeps every sample and adds the sync port state, the number of the most recent pulse and the time since its onset. This suits models of the whole recording, where cutting epochs would drop the samples between pulses.
 
 ```{r}
-tagged <- g3_add_syncport(rec$gaze, rec$events)
+tagged <- g3_add_syncport(rec$gaze, rec$events, direction = "out")
 tagged |>
   filter(syncport == 1) |>
   select(time, pulse, pulse_time)
@@ -73,26 +83,36 @@ tagged |>
 Long recordings are hard to read at 50 samples per second. The `smooth` argument draws a [running median]{.hl} over the raw trace, here one second wide. Short blinks do not pull it down, and the data themselves are not changed.
 
 ```{r}
-plot_g3_pupil(rec, smooth = 1)
+plot_g3_pupil(rec, direction = "out", smooth = 1)
 ```
 
 ## Epochs
 
-`g3_epochs()` cuts the samples into [epochs]{.hl} around each pulse onset and adds the time relative to the onset. After `g3_pupil_long()`, there is one row per sample and eye, which suits ggplot2 and mixed-effects models.
+`g3_epochs()` cuts the samples into [epochs]{.hl} around each pulse onset. It numbers the epochs in the `epoch` column and adds the time relative to the onset. After `g3_pupil_long()`, there is one row per sample and eye, which suits ggplot2 and mixed-effects models.
 
 ```{r}
-ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5)
+ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5, direction = "out")
 pupil <- g3_pupil_long(ep)
 head(pupil)
 ```
 
-Given epochs, `plot_g3_pupil()` puts the time from the pulse onset on the x axis. Each eye gets its own panel, with a thin line per pulse and the mean drawn on top.
+The onsets do not have to be sync port pulses. `g3_epochs()` also takes a data frame with an `onset` column, such as the [trial onsets]{.hl} of an experiment, and copies its other columns to the samples of each epoch.
+
+```{r}
+trials <- data.frame(onset = c(2, 12, 22), condition = c("a", "b", "a"))
+trial_epochs <- g3_epochs(rec$gaze, trials, before = 0.5, after = 3)
+count(trial_epochs, epoch, condition)
+```
+
+An experiment script can also send events to the glasses through their API, each with a tag and an object. `g3_api_events()` extracts these [API events]{.hl} from the event data, and its output can be passed to `g3_epochs()` in the same way. The example recording has none.
+
+Given epochs, `plot_g3_pupil()` puts the time from the onset on the x axis. Each eye gets its own panel, with a thin line per epoch and the mean drawn on top.
 
 ```{r}
 plot_g3_pupil(ep)
 ```
 
-For models of the whole time course, such as generalised additive mixed models, `g3_downsample()` averages the samples into [time bins]{.hl}. Bins are counted from the pulse onset, and a bin where more than half of the samples are missing is left empty. Character columns, such as a participant or condition label, are dropped unless you name them in `by`, and the groups of a grouped tibble are kept.
+For models of the whole time course, such as generalised additive mixed models, `g3_downsample()` averages the samples into [time bins]{.hl}. Bins are counted from the onset, and a bin where more than half of the samples are missing is left empty. Character columns, such as a participant or condition label, are dropped unless you name them in `by`, and the groups of a grouped tibble are kept.
 
 ```{r}
 binned <- g3_downsample(pupil, bin = 0.1)
@@ -109,13 +129,32 @@ glasses3 leaves [pupil preprocessing]{.hl} to other packages. PupillometryR, gaz
 plot_g3_gaze(rec)
 ```
 
-`g3_gaze_angles()` turns the gaze direction of each eye into [azimuth]{.hl} and [elevation]{.hl} in degrees, relative to straight ahead of the glasses, and adds the [vergence]{.hl} angle between the eyes. Angular velocity for detecting fixations and saccades can be computed from these columns.
+`g3_gaze_angles()` turns the gaze direction of each eye into [azimuth]{.hl} and [elevation]{.hl} in degrees, relative to straight ahead of the glasses, and adds the [vergence]{.hl} angle between the eyes.
 
 ```{r}
 angles <- g3_gaze_angles(rec$gaze)
 angles |>
   select(left_azimuth, left_elevation, vergence) |>
   summary()
+```
+
+`g3_gaze_velocity()` adds the [angular velocity]{.hl} of each eye from one sample to the next, in degrees per second. It is not smoothed, and can be the starting point for detecting fixations and saccades.
+
+```{r}
+velocity <- g3_gaze_velocity(rec$gaze)
+velocity |>
+  select(left_velocity, right_velocity) |>
+  summary()
+```
+
+## Clock time
+
+`g3_add_clock_time()` adds the date and time of each sample, from the start time stored in the recording. The [clock time]{.hl} helps to align the data with other devices that log the time of day.
+
+```{r}
+g3_add_clock_time(rec$gaze, rec) |>
+  select(time, clock_time) |>
+  head()
 ```
 
 ## Damaged files and gaps

@@ -4,9 +4,9 @@
 #' shaded areas. With several recordings in `x`, each gets its own panel,
 #' with its own time axis.
 #'
-#' If `x` comes from [g3_epochs()], the time axis is the time from the pulse
-#' onset instead. Each eye gets its own panel, with a thin line for every
-#' pulse and a thick line for the mean across pulses.
+#' If `x` comes from [g3_epochs()], the time axis is the time from the onset
+#' instead. Each eye gets its own panel, with a thin line for every epoch and
+#' a thick line for the mean across epochs.
 #'
 #' The eye colours and the theme are described in [theme_g3()].
 #'
@@ -17,12 +17,12 @@
 #'   `g3_recording`. Not used for epochs.
 #' @param eyes Which eyes to plot.
 #' @param from,to Time window in seconds. Defaults to all the data. For
-#'   epochs, the window is in seconds from the pulse onset.
+#'   epochs, the window is in seconds from the onset.
 #' @param direction Sync port direction to show; see [g3_syncport()].
 #' @param smooth Width in seconds of a running median drawn over the raw
 #'   trace, or `NULL` (the default) for none. Missing samples are ignored,
 #'   and the line is left out where more than half of the window is missing.
-#'   For epochs, each pulse is smoothed before the mean is taken. Only the
+#'   For epochs, each epoch is smoothed before the mean is taken. Only the
 #'   plot is smoothed.
 #'
 #' @return A ggplot object. The `plot()` method for recordings from
@@ -30,15 +30,15 @@
 #'
 #' @examples
 #' rec <- read_g3(g3_example())
-#' plot_g3_pupil(rec)
+#' plot_g3_pupil(rec, direction = "out")
 #' plot_g3_pupil(rec$gaze, eyes = "left", from = 5, to = 15)
-#' plot_g3_pupil(rec, smooth = 1)
+#' plot_g3_pupil(rec, direction = "out", smooth = 1)
 #'
-#' epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1)
+#' epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1, direction = "out")
 #' plot_g3_pupil(epochs)
 #' @export
 plot_g3_pupil <- function(x, events = NULL, eyes = c("left", "right"),
-                          from = NULL, to = NULL, direction = c("out", "in"),
+                          from = NULL, to = NULL, direction = c("in", "out"),
                           smooth = NULL) {
   if (inherits(x, "g3_recording")) {
     if (is.null(events)) events <- x$events
@@ -54,7 +54,7 @@ plot_g3_pupil <- function(x, events = NULL, eyes = c("left", "right"),
   if (nrow(x) < 2L) {
     stop("`x` needs at least two samples to plot.", call. = FALSE)
   }
-  if (all(c("epoch_time", "pulse") %in% names(x))) {
+  if (all(c("epoch_time", "epoch") %in% names(x))) {
     return(plot_pupil_epochs(x, eyes, from, to, smooth))
   }
   from <- if (is.null(from)) min(x$time) else from
@@ -108,10 +108,10 @@ plot_pupil_epochs <- function(x, eyes, from, to, smooth = NULL) {
   }
   d <- x |>
     dplyr::filter(epoch_time >= from, epoch_time <= to) |>
-    dplyr::select(recording, pulse, time, epoch_time, left_pupil, right_pupil) |>
+    dplyr::select(recording, epoch, time, epoch_time, left_pupil, right_pupil) |>
     g3_pupil_long() |>
     dplyr::filter(eye %in% eyes) |>
-    dplyr::mutate(trace = paste(recording, pulse, eye))
+    dplyr::mutate(trace = paste(recording, epoch, eye))
   if (!is.null(smooth)) {
     d <- d |>
       dplyr::arrange(trace, epoch_time) |>
@@ -128,12 +128,12 @@ plot_pupil_epochs <- function(x, eyes, from, to, smooth = NULL) {
     dplyr::filter(!is.na(pupil)) |>
     dplyr::mutate(bin = round(epoch_time / step) * step) |>
     dplyr::summarise(pupil = mean(pupil), .by = c(recording, eye, bin))
-  n_pulses <- d |>
-    dplyr::summarise(n = dplyr::n_distinct(pulse), .by = c(recording, eye)) |>
+  n_epochs <- d |>
+    dplyr::summarise(n = dplyr::n_distinct(epoch), .by = c(recording, eye)) |>
     dplyr::pull(n) |>
     c(1L) |>
     max()
-  alpha <- max(0.1, min(0.45, 3 / n_pulses))
+  alpha <- max(0.1, min(0.45, 3 / n_epochs))
   p <- ggplot2::ggplot(d, ggplot2::aes(x = .data$epoch_time, y = .data$pupil,
                                        colour = .data$eye)) +
     ggplot2::geom_vline(xintercept = 0, colour = g3_ink[["secondary"]], linewidth = 0.35) +
@@ -145,8 +145,8 @@ plot_pupil_epochs <- function(x, eyes, from, to, smooth = NULL) {
                          colour = g3_eye_means[[e]], linewidth = 0.9, na.rm = TRUE)
     }) +
     scale_colour_eyes(guide = "none") +
-    ggplot2::labs(x = "Time from pulse onset (s)", y = "Pupil diameter (mm)",
-                  caption = "Thin lines: single pulses. Thick line: mean across pulses.") +
+    ggplot2::labs(x = "Time from onset (s)", y = "Pupil diameter (mm)",
+                  caption = "Thin lines: single epochs. Thick line: mean across epochs.") +
     theme_g3()
   eye_labels <- ggplot2::as_labeller(c(left = "Left eye", right = "Right eye"))
   if (d$recording |> unique() |> length() > 1L) {

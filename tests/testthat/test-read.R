@@ -114,3 +114,27 @@ test_that("lines that are not JSON objects are ignored", {
   close(con)
   expect_equal(nrow(read_g3_gaze(file.path(dir, "gazedata.gz"))), 1)
 })
+
+test_that("binary meta files are kept as raw vectors", {
+  root <- withr_tempdir()
+  dir <- file.path(root, "rec")
+  dir.create(dir)
+  file.copy(list.files(g3_example(), full.names = TRUE), dir, recursive = TRUE)
+  writeBin(as.raw(c(0xff, 0xfe, 0x00, 0x41)), file.path(dir, "meta", "custom"))
+  dir.create(file.path(dir, "meta", "subfolder"))
+  info <- read_g3_info(dir)
+  expect_type(info$meta$custom, "raw")
+  expect_false("subfolder" %in% names(info$meta))
+  expect_equal(info$participant, "example")
+  expect_equal(nrow(list_g3_recordings(root)), 1)
+})
+
+test_that("readers use the file names in recording.g3", {
+  r <- synthetic_recording(duration = 2)
+  file.rename(file.path(r, "gazedata.gz"), file.path(r, "gaze_renamed.gz"))
+  rec_file <- file.path(r, "recording.g3")
+  writeLines(sub('"file":"gazedata.gz"', '"file":"gaze_renamed.gz"', readLines(rec_file)),
+             rec_file)
+  expect_equal(nrow(read_g3_gaze(r)), 200)
+  expect_equal(read_g3(r)$gaze, read_g3_gaze(r))
+})

@@ -2,7 +2,7 @@
 % Please edit documentation in R/info.R
 \name{list_g3_recordings}
 \alias{list_g3_recordings}
-\title{Find recordings in a folder}
+\title{List recordings}
 \usage{
 list_g3_recordings(path, recursive = TRUE)
 }

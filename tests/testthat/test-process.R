@@ -66,11 +66,12 @@ test_that("g3_downsample averages within bins", {
   expect_error(g3_downsample(x, min_valid = 2), "between 0 and 1")
 })
 
-test_that("g3_downsample keeps recordings, pulses and eyes apart", {
+test_that("g3_downsample keeps recordings, epochs and eyes apart", {
   rec <- read_g3(g3_example())
-  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2)
+  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 2, direction = "out")
   long <- g3_downsample(g3_pupil_long(ep), bin = 0.1)
-  per_epoch <- table(long$pulse, long$eye)
+  per_epoch <- table(long$epoch, long$eye)
+  expect_gt(length(per_epoch), 0)
   expect_true(all(per_epoch <= 25))
   expect_equal(long$epoch_time / 0.1, round(long$epoch_time / 0.1), tolerance = 1e-9)
   expect_true(any(abs(long$epoch_time) < 1e-9))
@@ -118,4 +119,61 @@ test_that("g3_downsample keeps the columns named in by", {
   expect_error(g3_downsample(x, by = "participant"), "participant")
   expect_error(g3_downsample(x, by = "time"), "time column")
   expect_error(g3_downsample(x, by = 1), "character")
+})
+
+test_that("g3_downsample does not split bins at sync pulses", {
+  rec <- read_g3(g3_example())
+  tagged <- g3_add_syncport(rec$gaze, rec$events, "out")
+  ds <- g3_downsample(tagged, bin = 0.1)
+  expect_false(anyDuplicated(ds$time) > 0)
+  expect_type(ds$samples, "integer")
+  expect_type(ds$pulse, "integer")
+  first <- tagged$pulse[match(0.1, round(floor(tagged$time / 0.1 + 1e-9) * 0.1, 9))]
+  expect_equal(ds$pulse[abs(ds$time - 0.1) < 1e-9], first)
+})
+
+test_that("g3_downsample handles data with no value columns", {
+  out <- g3_downsample(data.frame(time = c(0.01, 0.02, 0.15), label = "a"), bin = 0.1)
+  expect_equal(names(out), c("time", "samples"))
+  expect_equal(out$samples, c(2L, 1L))
+})
+
+test_that("g3_gaze_velocity divides the angle by the time step", {
+  a <- c(0, 1, 3, NA, 4) * pi / 180
+  gaze <- data.frame(
+    recording = "r",
+    time = c(0, 0.02, 0.04, 0.06, 0.08),
+    left_direction_x = -sin(a), left_direction_y = 0, left_direction_z = cos(a),
+    right_direction_x = 0, right_direction_y = 0, right_direction_z = 1
+  )
+  out <- g3_gaze_velocity(gaze[c(3, 1, 2, 5, 4), ])
+  expect_equal(out$time, gaze$time[c(3, 1, 2, 5, 4)])
+  expect_equal(out$left_velocity, c(100, NA, 50, NA, NA))
+  expect_equal(out$right_velocity, c(0, NA, 0, 0, 0))
+  ex <- g3_gaze_velocity(read_g3_gaze(g3_example()))
+  expect_true(all(ex$left_velocity >= 0, na.rm = TRUE))
+})
+
+test_that("g3_gaze_velocity starts again in each epoch", {
+  rec <- read_g3(g3_example())
+  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 1, direction = "out")
+  v <- g3_gaze_velocity(ep)
+  firsts <- !duplicated(v$epoch)
+  expect_true(all(is.na(v$left_velocity[firsts])))
+})
+
+test_that("g3_add_clock_time adds the start time", {
+  rec <- read_g3(g3_example())
+  out <- g3_add_clock_time(rec$gaze, rec)
+  expect_s3_class(out$clock_time, "POSIXct")
+  expect_equal(names(out)[3], "clock_time")
+  expect_equal(as.numeric(out$clock_time - rec$info$created, units = "secs"), out$time)
+  expect_equal(g3_add_clock_time(rec$gaze, rec$info), out)
+  recs <- list_g3_recordings(two_recordings())
+  gaze <- read_g3_gaze(recs)
+  multi <- g3_add_clock_time(gaze, recs)
+  expect_equal(nrow(multi), nrow(gaze))
+  expect_false(anyNA(multi$clock_time))
+  expect_error(g3_add_clock_time(gaze, rec), "recording")
+  expect_warning(g3_add_clock_time(gaze, recs[1, ]), "No start time for recording: rec_b")
 })

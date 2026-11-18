@@ -3,7 +3,8 @@
 #' Reads a recording folder as written to the SD card by the Tobii Pro
 #' Glasses 3. The folder contains `recording.g3`, `gazedata.gz`,
 #' `imudata.gz`, `eventdata.gz` and a `meta` folder. The scene video is not
-#' needed.
+#' needed. All readers take the names of the data files from `recording.g3`,
+#' and use these usual names if it does not give them.
 #'
 #' `read_g3()` reads one recording. To read several recordings into one data
 #' frame, give their paths to [read_g3_gaze()], [read_g3_imu()] or
@@ -26,7 +27,7 @@
 #' rec
 #' summary(rec)
 #' rec$gaze
-#' plot(rec)
+#' plot(rec, direction = "out")
 #' @export
 read_g3 <- function(path, data = c("gaze", "imu", "events")) {
   data <- match.arg(data, several.ok = TRUE)
@@ -38,15 +39,10 @@ read_g3 <- function(path, data = c("gaze", "imu", "events")) {
     stop("Recording folder not found: ", path, call. = FALSE)
   }
   info <- read_g3_info(path)
-  file_for <- function(stream, default) {
-    f <- info$files[[stream]]
-    if (is.null(f) || is.na(f)) f <- default
-    file.path(path, f)
-  }
   id <- path |> normalizePath() |> basename()
   stream <- function(name, default, parser) {
     if (!name %in% data) return(NULL)
-    file_for(name, default) |> parser() |> add_recording(id)
+    path |> resolve_file(name, default) |> parser() |> add_recording(id)
   }
   out <- list(
     info = info,
@@ -107,7 +103,7 @@ read_g3 <- function(path, data = c("gaze", "imu", "events")) {
 #' read_g3_gaze(recordings)
 #' @export
 read_g3_gaze <- function(path) {
-  read_many(path, "gazedata.gz", parse_gaze)
+  read_many(path, "gaze", "gazedata.gz", parse_gaze)
 }
 
 #' Read inertial measurement unit data
@@ -133,7 +129,7 @@ read_g3_gaze <- function(path) {
 #' read_g3_imu(g3_example())
 #' @export
 read_g3_imu <- function(path) {
-  read_many(path, "imudata.gz", parse_imu)
+  read_many(path, "imu", "imudata.gz", parse_imu)
 }
 
 #' Read event data
@@ -156,13 +152,13 @@ read_g3_imu <- function(path) {
 #' read_g3_events(g3_example())
 #' @export
 read_g3_events <- function(path) {
-  read_many(path, "eventdata.gz", parse_events)
+  read_many(path, "events", "eventdata.gz", parse_events)
 }
 
-read_many <- function(path, file, parser) {
+read_many <- function(path, stream, default, parser) {
   files <- path |>
     g3_paths() |>
-    purrr::map_chr(\(p) resolve_file(p, file))
+    purrr::map_chr(\(p) resolve_file(p, stream, default))
   files |>
     purrr::map2(recording_ids(files), \(f, id) f |> parser() |> add_recording(id)) |>
     purrr::list_rbind()

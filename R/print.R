@@ -44,8 +44,10 @@ summary.g3_recording <- function(object, ...) {
     pupil_left = summary(g$left_pupil),
     pupil_right = summary(g$right_pupil),
     max_gap = if (nrow(g) > 1L) g$time |> diff() |> max() else NA_real_,
-    syncport_pulses = if (is.null(object$events)) NA_integer_ else
-      object$events |> g3_syncport() |> nrow()
+    syncport_pulses = c("in", "out") |>
+      purrr::set_names() |>
+      purrr::map_int(\(d) if (is.null(object$events)) NA_integer_ else
+        object$events |> syncport_pulses(d) |> nrow())
   )
   class(out) <- "summary.g3_recording"
   out
@@ -61,6 +63,7 @@ print.summary.g3_recording <- function(x, ...) {
   print(x$pupil_left)
   cat("Right pupil (mm):\n")
   print(x$pupil_right)
-  cat("Sync port pulses (out): ", x$syncport_pulses, "\n", sep = "")
+  cat("Sync port pulses: ", x$syncport_pulses[["in"]], " in, ", x$syncport_pulses[["out"]],
+      " out\n", sep = "")
   invisible(x)
 }

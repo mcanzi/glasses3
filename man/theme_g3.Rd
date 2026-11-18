@@ -14,7 +14,7 @@ A ggplot2 theme.
 }
 \description{
 The ggplot2 theme used by all plots in the package, for giving your own
-plots the same look. It builds on \code{\link[ggplot2:ggtheme]{ggplot2::theme_minimal()}} with light
+plots the same look. It builds on \code{\link[ggplot2:theme_minimal]{ggplot2::theme_minimal()}} with light
 grey gridlines, grey axis text, the legend at the top left and bold
 left-aligned panel titles on a white background.
 }

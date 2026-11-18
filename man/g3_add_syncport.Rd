@@ -4,7 +4,7 @@
 \alias{g3_add_syncport}
 \title{Add sync port information to samples}
 \usage{
-g3_add_syncport(x, events, direction = c("out", "in"))
+g3_add_syncport(x, events, direction = c("in", "out"))
 }
 \arguments{
 \item{x}{A data frame with a \code{time} column, such as the output of
@@ -12,8 +12,9 @@ g3_add_syncport(x, events, direction = c("out", "in"))
 
 \item{events}{Event data from \code{\link[=read_g3_events]{read_g3_events()}}.}
 
-\item{direction}{\code{"out"} for the signal sent by the glasses, \code{"in"} for
-the signal received from external equipment.}
+\item{direction}{\code{"in"} for the signal received from external equipment,
+such as stimulus onsets sent by a stimulus computer, or \code{"out"} for the
+signal sent by the glasses.}
 }
 \value{
 \code{x} with three added columns: \code{syncport} (1 while the signal is
@@ -28,7 +29,7 @@ of their own recording through the \code{recording} column.
 }
 \examples{
 rec <- read_g3(g3_example())
-gaze <- g3_add_syncport(rec$gaze, rec$events)
+gaze <- g3_add_syncport(rec$gaze, rec$events, direction = "out")
 gaze |>
   dplyr::filter(syncport == 1) |>
   dplyr::select(time, pulse, pulse_time)

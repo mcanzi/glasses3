@@ -14,7 +14,8 @@
 #'   * `recording_unit` and `head_unit` serial numbers
 #'   * `files`, the names of the data files
 #'   * `scene_camera`, the camera calibration
-#'   * `meta`, all files in the `meta` folder as character strings
+#'   * `meta`, all files in the `meta` folder as character strings, or as
+#'     raw vectors for files that are not UTF-8 text
 #'
 #' @examples
 #' read_g3_info(g3_example())
@@ -30,18 +31,19 @@ read_g3_info <- function(path) {
   meta_dir <- file.path(path, meta_name)
   meta <- list()
   if (dir.exists(meta_dir)) {
-    meta_files <- list.files(meta_dir)
+    meta_files <- list.files(meta_dir) |>
+      purrr::discard(\(f) dir.exists(file.path(meta_dir, f)))
     meta <- file.path(meta_dir, meta_files) |>
-      purrr::map(\(f) f |> readLines(warn = FALSE) |> paste(collapse = "\n")) |>
-      purrr::map(stringr::str_trim) |>
+      purrr::map(read_meta_file) |>
       purrr::set_names(meta_files)
   }
-  participant <- meta$participant
-  if (!is.null(participant) && jsonlite::validate(participant)) {
+  participant <- meta_text(meta, "participant")
+  if (!is.na(participant) && jsonlite::validate(participant)) {
     p <- jsonlite::fromJSON(participant)
-    if (is.list(p) && !is.null(p$name)) participant <- p$name
+    if (is.list(p) && is.character(p[["name"]]) && length(p[["name"]]) == 1L) {
+      participant <- stringr::str_trim(p[["name"]])
+    }
   }
-  if (!is.null(participant)) participant <- stringr::str_trim(participant)
   out <- list(
     name = rec$name %||% NA_character_,
     uuid = rec$uuid %||% NA_character_,
@@ -51,10 +53,10 @@ read_g3_info <- function(path) {
     duration = rec$duration %||% NA_real_,
     gaze_samples = rec$gaze$samples %||% NA_integer_,
     gaze_valid_samples = rec$gaze[["valid-samples"]] %||% NA_integer_,
-    participant = participant %||% NA_character_,
-    firmware = meta$RuVersion %||% NA_character_,
-    recording_unit = meta$RuSerial %||% NA_character_,
-    head_unit = meta$HuSerial %||% NA_character_,
+    participant = participant,
+    firmware = meta_text(meta, "RuVersion"),
+    recording_unit = meta_text(meta, "RuSerial"),
+    head_unit = meta_text(meta, "HuSerial"),
     files = list(
       gaze = rec$gaze$file %||% NA_character_,
       imu = rec$imu$file %||% NA_character_,
@@ -68,7 +70,25 @@ read_g3_info <- function(path) {
   out
 }
 
-#' Find recordings in a folder
+read_meta_file <- function(file) {
+  bytes <- readBin(file, "raw", file.size(file))
+  if (any(bytes == as.raw(0L))) {
+    return(bytes)
+  }
+  text <- rawToChar(bytes)
+  if (!validUTF8(text)) {
+    return(bytes)
+  }
+  Encoding(text) <- "UTF-8"
+  stringr::str_trim(text)
+}
+
+meta_text <- function(meta, key) {
+  value <- meta[[key]]
+  if (is.character(value) && length(value) == 1L) value else NA_character_
+}
+
+#' List recordings
 #'
 #' Searches a folder, such as the root of the Glasses 3 SD card, for
 #' recording folders.

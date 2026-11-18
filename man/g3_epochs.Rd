@@ -2,14 +2,14 @@
 % Please edit documentation in R/sync.R
 \name{g3_epochs}
 \alias{g3_epochs}
-\title{Cut samples into epochs around sync port pulses}
+\title{Cut samples into epochs}
 \usage{
 g3_epochs(
   x,
   events,
   before = 0,
   after = 1,
-  direction = c("out", "in"),
+  direction = c("in", "out"),
   pulses = NULL
 )
 }
@@ -17,29 +17,45 @@ g3_epochs(
 \item{x}{A data frame with a \code{time} column, such as the output of
 \code{\link[=read_g3_gaze]{read_g3_gaze()}} or \code{\link[=read_g3_imu]{read_g3_imu()}}.}
 
-\item{events}{Event data from \code{\link[=read_g3_events]{read_g3_events()}}.}
+\item{events}{Event data from \code{\link[=read_g3_events]{read_g3_events()}}, to cut at the sync port
+pulses, or a data frame with an \code{onset} column in seconds since the
+start of the recording. With a \code{recording} column, each recording is
+cut at its own onsets; without one, every recording is cut at all
+onsets. The other columns of the data frame, such as a condition or the
+\code{tag} of an API event, are copied to the samples of each epoch, except
+\code{time}, \code{epoch} and \code{epoch_time}.}
 
 \item{before, after}{Seconds to keep before and after each onset.}
 
-\item{direction}{\code{"out"} for the signal sent by the glasses, \code{"in"} for
-the signal received from external equipment.}
+\item{direction}{Sync port direction, used with event data; see
+\code{\link[=g3_syncport]{g3_syncport()}}.}
 
-\item{pulses}{Which pulses to use, as pulse numbers. Defaults to all.}
+\item{pulses}{Which sync port pulses to use, as pulse numbers. Defaults
+to all. To use some rows of a table of onsets, filter the table instead.}
 }
 \value{
 The selected rows of \code{x}, sorted by time within each epoch, with
-added columns \code{pulse} and \code{epoch_time} (seconds relative to the pulse
-onset). Samples can appear in more than one epoch if epochs overlap. If
-\code{x} is a grouped tibble, the result has the same groups.
+added columns \code{epoch} (running number of the onset within the
+recording) and \code{epoch_time} (seconds relative to the onset). Epochs cut
+at sync port pulses also get \code{pulse}, the pulse number. Columns copied
+from a table of onsets replace columns of \code{x} with the same name.
+Samples can appear in more than one epoch if epochs overlap. If \code{x} is
+a grouped tibble, the result has the same groups.
 }
 \description{
 Returns the samples from \code{before} seconds before to \code{after} seconds after
-the onset of each sync port pulse, for example to analyse pupil responses
-to stimuli whose onset was marked with a sync pulse. With several
-recordings, each recording is cut at its own pulses.
+each onset, for example to analyse pupil responses to stimuli. The onsets
+are the sync port pulses in the event data, or any table of onsets, such
+as the API events from \code{\link[=g3_api_events]{g3_api_events()}} or the trial onsets of an
+experiment. With several recordings, each recording is cut at its own
+onsets.
 }
 \examples{
 rec <- read_g3(g3_example())
-ep <- g3_epochs(rec$gaze, rec$events, before = 1, after = 5)
-dplyr::count(ep, pulse)
+ep <- g3_epochs(rec$gaze, rec$events, before = 1, after = 5, direction = "out")
+dplyr::count(ep, epoch)
+
+trials <- data.frame(onset = c(2, 12, 22), condition = c("a", "b", "a"))
+ep <- g3_epochs(rec$gaze, trials, before = 0.5, after = 3)
+dplyr::count(ep, epoch, condition)
 }

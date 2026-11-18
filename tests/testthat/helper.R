@@ -4,7 +4,7 @@ withr_tempdir <- function() {
   d
 }
 
-fake_events <- function(times, values, direction = "out") {
+fake_events <- function(times, values, direction = "in") {
   data.frame(time = times, type = "syncport", direction = direction,
              value = values, data = "{}")
 }
@@ -38,7 +38,7 @@ synthetic_recording <- function(rate = 100, duration = 10, pulse_every = 1,
   onsets <- seq(0.5, duration - pulse_width, by = pulse_every)
   ev_time <- sort(c(onsets, onsets + pulse_width))
   ev_value <- rep(c(1, 0), length(onsets))
-  events <- sprintf('{"type":"syncport","timestamp":%.6f,"data":{"direction":"out","value":%d}}',
+  events <- sprintf('{"type":"syncport","timestamp":%.6f,"data":{"direction":"in","value":%d}}',
                     ev_time, as.integer(ev_value))
   write_gz <- function(lines, file) {
     con <- gzfile(file.path(dir, file), "w")

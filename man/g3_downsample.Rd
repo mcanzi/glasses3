@@ -22,9 +22,10 @@ condition column. They are kept in the result.}
 }
 \value{
 A tibble with one row per bin and group, starting with the
-grouping columns. Other numeric columns hold the mean of the available
-samples, and logical columns, such as \code{valid}, the proportion of \code{TRUE}
-samples. \code{samples} gives the number of samples in the bin. All other
+grouping columns. \code{samples} gives the number of samples in the bin. A
+\code{pulse} column gets the pulse of the first sample in the bin. Other
+numeric columns hold the mean of the available samples, and logical
+columns, such as \code{valid}, the proportion of \code{TRUE} samples. All other
 columns are dropped. A grouped tibble keeps its groups.
 }
 \description{
@@ -34,19 +35,20 @@ samples make models faster to fit and reduce the autocorrelation the model
 has to account for.
 }
 \details{
-Bins are counted from time 0, or from the pulse onset for epochs from
+Bins are counted from time 0, or from the onset for epochs from
 \code{\link[=g3_epochs]{g3_epochs()}}, so that the onset falls on a bin boundary. Each bin is
-labelled with its start time. Rows are grouped by the \code{recording}, \code{pulse}
-and \code{eye} columns where these exist, so the function works on the output
-of \code{\link[=read_g3_gaze]{read_g3_gaze()}}, \code{\link[=g3_epochs]{g3_epochs()}} and \code{\link[=g3_pupil_long]{g3_pupil_long()}}. Columns named in
-\code{by} are added to these groups, and so are the groups of a grouped tibble.
+labelled with its start time. Rows are grouped by the \code{recording},
+\code{epoch} and \code{eye} columns where these exist, so the function works on the
+output of \code{\link[=read_g3_gaze]{read_g3_gaze()}}, \code{\link[=g3_add_syncport]{g3_add_syncport()}}, \code{\link[=g3_epochs]{g3_epochs()}} and
+\code{\link[=g3_pupil_long]{g3_pupil_long()}}. Columns named in \code{by} are added to these groups, and so
+are the groups of a grouped tibble.
 }
 \examples{
 gaze <- read_g3_gaze(g3_example())
 g3_downsample(gaze, bin = 0.1)
 
 rec <- read_g3(g3_example())
-ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 3)
+ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 3, direction = "out")
 g3_downsample(g3_pupil_long(ep), bin = 0.1)
 
 gaze |>

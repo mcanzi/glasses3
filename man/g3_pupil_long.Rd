@@ -2,7 +2,7 @@
 % Please edit documentation in R/sync.R
 \name{g3_pupil_long}
 \alias{g3_pupil_long}
-\title{Pupil data in long format}
+\title{Reshape pupil data to long format}
 \usage{
 g3_pupil_long(gaze)
 }
@@ -11,7 +11,7 @@ g3_pupil_long(gaze)
 }
 \value{
 A tibble with the non-eye columns of \code{gaze} (such as \code{recording},
-\code{time}, \code{pulse} or \code{epoch_time}, if present), plus \code{eye} (\code{"left"} or
+\code{time}, \code{epoch} or \code{epoch_time}, if present), plus \code{eye} (\code{"left"} or
 \code{"right"}) and \code{pupil}. Groups of a grouped tibble are kept if their
 columns are still in the result.
 }

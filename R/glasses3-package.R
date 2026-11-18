@@ -8,9 +8,9 @@
 "_PACKAGE"
 
 utils::globalVariables(c(
-  "bin", "created", "end", "epoch_time", "eye", "gaze2d_x", "gaze2d_y", "height", "ix", "iy",
-  "left_direction_x", "left_direction_y", "left_direction_z", "left_origin_x", "left_pupil",
-  "n", "offset", "onset", "pulse", "pupil", "recording", "right_direction_x", "right_direction_y",
-  "right_direction_z", "right_origin_x", "right_pupil", "samples", "time", "type", "value",
-  "width", "x", "y"
+  ".start", "bin", "created", "end", "epoch", "epoch_time", "eye", "gaze2d_x", "gaze2d_y",
+  "height", "ix", "iy", "left_direction_x", "left_direction_y", "left_direction_z",
+  "left_origin_x", "left_pupil", "n", "offset", "onset", "pulse", "pupil", "recording",
+  "right_direction_x", "right_direction_y", "right_direction_z", "right_origin_x",
+  "right_pupil", "samples", "time", "type", "value", "width", "x", "y"
 ))

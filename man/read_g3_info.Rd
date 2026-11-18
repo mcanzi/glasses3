@@ -21,7 +21,8 @@ A list of class \code{g3_info} with these elements:
 \item \code{recording_unit} and \code{head_unit} serial numbers
 \item \code{files}, the names of the data files
 \item \code{scene_camera}, the camera calibration
-\item \code{meta}, all files in the \code{meta} folder as character strings
+\item \code{meta}, all files in the \code{meta} folder as character strings, or as
+raw vectors for files that are not UTF-8 text
 }
 }
 \description{

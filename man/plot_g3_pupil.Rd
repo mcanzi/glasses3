@@ -11,7 +11,7 @@ plot_g3_pupil(
   eyes = c("left", "right"),
   from = NULL,
   to = NULL,
-  direction = c("out", "in"),
+  direction = c("in", "out"),
   smooth = NULL
 )
 
@@ -28,14 +28,14 @@ pulses are drawn as shaded areas. Taken from \code{x} if \code{x} is a
 \item{eyes}{Which eyes to plot.}
 
 \item{from, to}{Time window in seconds. Defaults to all the data. For
-epochs, the window is in seconds from the pulse onset.}
+epochs, the window is in seconds from the onset.}
 
 \item{direction}{Sync port direction to show; see \code{\link[=g3_syncport]{g3_syncport()}}.}
 
 \item{smooth}{Width in seconds of a running median drawn over the raw
 trace, or \code{NULL} (the default) for none. Missing samples are ignored,
 and the line is left out where more than half of the window is missing.
-For epochs, each pulse is smoothed before the mean is taken. Only the
+For epochs, each epoch is smoothed before the mean is taken. Only the
 plot is smoothed.}
 
 \item{...}{Passed to \code{\link[=plot_g3_pupil]{plot_g3_pupil()}}.}
@@ -50,18 +50,18 @@ shaded areas. With several recordings in \code{x}, each gets its own panel,
 with its own time axis.
 }
 \details{
-If \code{x} comes from \code{\link[=g3_epochs]{g3_epochs()}}, the time axis is the time from the pulse
-onset instead. Each eye gets its own panel, with a thin line for every
-pulse and a thick line for the mean across pulses.
+If \code{x} comes from \code{\link[=g3_epochs]{g3_epochs()}}, the time axis is the time from the onset
+instead. Each eye gets its own panel, with a thin line for every epoch and
+a thick line for the mean across epochs.
 
 The eye colours and the theme are described in \code{\link[=theme_g3]{theme_g3()}}.
 }
 \examples{
 rec <- read_g3(g3_example())
-plot_g3_pupil(rec)
+plot_g3_pupil(rec, direction = "out")
 plot_g3_pupil(rec$gaze, eyes = "left", from = 5, to = 15)
-plot_g3_pupil(rec, smooth = 1)
+plot_g3_pupil(rec, direction = "out", smooth = 1)
 
-epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1)
+epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1, direction = "out")
 plot_g3_pupil(epochs)
 }

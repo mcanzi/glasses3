@@ -1,3 +1,52 @@
+# glasses3 0.2.0
+
+## Breaking changes
+
+* The sync port functions `g3_syncport()`, `g3_add_syncport()`, `g3_epochs()`
+  and `plot_g3_pupil()` now use `direction = "in"` by default, the pulses the
+  glasses receive from other equipment such as a stimulus computer. Use
+  `direction = "out"` for the pulses the glasses send.
+* `g3_epochs()` numbers the epochs in a new `epoch` column. Epochs cut at sync
+  port pulses keep the `pulse` column with the pulse number.
+  `plot_g3_pupil()`, `g3_downsample()` and `g3_gaze_velocity()` use `epoch` to
+  keep epochs apart.
+
+## New features
+
+* `g3_epochs()` also cuts epochs at the onsets in a data frame with an `onset`
+  column, such as the trial onsets of an experiment. Its other columns, such
+  as a condition, are copied to the samples of each epoch. Without a
+  `recording` column, every recording is cut at all onsets.
+* `g3_api_events()` extracts the events sent to the glasses through their API,
+  with their tag and object, ready to be passed to `g3_epochs()`.
+* `g3_gaze_velocity()` adds the angular velocity of each eye in degrees per
+  second.
+* `g3_add_clock_time()` adds the date and time of each sample from the start
+  time of the recording.
+* `summary()` of a recording counts the sync port pulses in both directions.
+
+## Bug fixes
+
+* `g3_downsample()` no longer splits a bin in two where a sync port pulse
+  starts in data from `g3_add_syncport()`. The `pulse` column now gets the
+  pulse of the first sample in the bin, and `samples` is an integer again.
+* A file in the `meta` folder that is not UTF-8 text, as the API can write, no
+  longer stops `read_g3_info()`, `read_g3()` and `list_g3_recordings()`. Such
+  files are returned as raw vectors, and folders inside `meta` are skipped.
+* Sync port signal changes without a value no longer create a pulse without
+  an onset.
+* `read_g3_gaze()`, `read_g3_imu()` and `read_g3_events()` now take the names
+  of the data files from `recording.g3`, as `read_g3()` already did.
+
+## Other changes
+
+* `g3_downsample()` is several times faster, and functions that work per
+  recording are faster with many recordings.
+* Highlighted terms in the vignette and on the website are now shown with a
+  highlighter.
+* The help page titles of `g3_pupil_long()` and `list_g3_recordings()` are now
+  "Reshape pupil data to long format" and "List recordings".
+
 # glasses3 0.1.0
 
 * Initial release.
