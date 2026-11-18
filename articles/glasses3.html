@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">glasses3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,13 @@
 
     
     
+<style type="text/css">
+.hl {
+  background: rgba(242, 145, 122, 0.25);
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+</style>
 <p>The Tobii Pro Glasses 3 save each recording as a folder on the SD
 card. Inside are the <span class="hl">scene video</span>, a <span class="hl">metadata file</span> called <code>recording.g3</code> and
 three gzipped JSON files with one record per line:
@@ -119,7 +126,7 @@ values.</p>
 <span><span class="co">#&gt; Right pupil (mm):</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs </span></span>
 <span><span class="co">#&gt;   4.629   6.001   6.192   6.152   6.312   7.419     295 </span></span>
-<span><span class="co">#&gt; Sync port pulses (out): 5</span></span></code></pre></div>
+<span><span class="co">#&gt; Sync port pulses: 0 in, 5 out</span></span></code></pre></div>
 <p>The <span class="hl"><code>valid</code> column</span> says whether a
 sample has a gaze point. The glasses can estimate gaze from one eye, so
 a sample can be valid while one of <code>valid_left</code> and
@@ -151,16 +158,20 @@ pulses, and the plots draw one panel per recording.</p>
 <div class="section level2">
 <h2 id="pupil-diameter">Pupil diameter<a class="anchor" aria-label="anchor" href="#pupil-diameter"></a>
 </h2>
+<p>The sync port connects the glasses to other equipment. A stimulus
+computer can send a pulse at each stimulus onset, which the glasses
+record with the <span class="hl">direction</span> <code>"in"</code>. The
+glasses can also send pulses that another device records, with the
+direction <code>"out"</code>. The functions use <code>"in"</code> by
+default. The example recording only holds pulses sent by the glasses, so
+the examples here use <code>direction = "out"</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span></span></code></pre></div>
-<p><img src="glasses3_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="672"></p>
-<p>The grey areas mark <span class="hl">sync port pulses</span>. The
-sync port connects the glasses to other equipment. A stimulus computer
-can send a pulse at each stimulus onset, or the glasses can send pulses
-that another device records. <code><a href="../reference/g3_syncport.html">g3_syncport()</a></code> lists the pulses
-with their onsets and offsets.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">rec</span>, direction <span class="op">=</span> <span class="st">"out"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="glasses3_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="672"></p>
+<p>The grey areas mark the <span class="hl">sync port pulses</span>.
+<code><a href="../reference/g3_syncport.html">g3_syncport()</a></code> lists them with their onsets and offsets.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/g3_syncport.html">g3_syncport</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">events</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/g3_syncport.html">g3_syncport</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">events</span>, direction <span class="op">=</span> <span class="st">"out"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
 <span><span class="co">#&gt;   recording pulse   onset offset duration</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
@@ -174,7 +185,7 @@ port state, the number of the most recent pulse and the time since its
 onset. This suits models of the whole recording, where cutting epochs
 would drop the samples between pulses.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tagged</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_add_syncport.html">g3_add_syncport</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">$</span><span class="va">events</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">tagged</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_add_syncport.html">g3_add_syncport</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">$</span><span class="va">events</span>, direction <span class="op">=</span> <span class="st">"out"</span><span class="op">)</span></span>
 <span><span class="va">tagged</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">syncport</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">pulse</span>, <span class="va">pulse_time</span><span class="op">)</span></span>
@@ -197,22 +208,22 @@ would drop the samples between pulses.</p>
 median</span> over the raw trace, here one second wide. Short blinks do
 not pull it down, and the data themselves are not changed.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">rec</span>, smooth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="glasses3_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="672"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">rec</span>, direction <span class="op">=</span> <span class="st">"out"</span>, smooth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="glasses3_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="672"></p>
 </div>
 <div class="section level2">
 <h2 id="epochs">Epochs<a class="anchor" aria-label="anchor" href="#epochs"></a>
 </h2>
-<p><code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> cuts the samples into <span class="hl">epochs</span> around each pulse onset and adds the time
-relative to the onset. After <code><a href="../reference/g3_pupil_long.html">g3_pupil_long()</a></code>, there is one
-row per sample and eye, which suits ggplot2 and mixed-effects
-models.</p>
+<p><code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> cuts the samples into <span class="hl">epochs</span> around each pulse onset. It numbers the epochs
+in the <code>epoch</code> column and adds the time relative to the
+onset. After <code><a href="../reference/g3_pupil_long.html">g3_pupil_long()</a></code>, there is one row per sample
+and eye, which suits ggplot2 and mixed-effects models.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_epochs.html">g3_epochs</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">$</span><span class="va">events</span>, before <span class="op">=</span> <span class="fl">0.5</span>, after <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">ep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_epochs.html">g3_epochs</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">$</span><span class="va">events</span>, before <span class="op">=</span> <span class="fl">0.5</span>, after <span class="op">=</span> <span class="fl">5</span>, direction <span class="op">=</span> <span class="st">"out"</span><span class="op">)</span></span>
 <span><span class="va">pupil</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_pupil_long.html">g3_pupil_long</a></span><span class="op">(</span><span class="va">ep</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pupil</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 12</span></span></span>
-<span><span class="co">#&gt;   recording   time gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z valid pulse</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 13</span></span></span>
+<span><span class="co">#&gt;   recording   time gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z valid epoch</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> recording 0.018<span style="text-decoration: underline;">0</span>    0.460    0.842     49.0    -<span style="color: #BB0000;">208.</span>     549. TRUE      1</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> recording 0.018<span style="text-decoration: underline;">0</span>    0.460    0.842     49.0    -<span style="color: #BB0000;">208.</span>     549. TRUE      1</span></span>
@@ -220,33 +231,54 @@ models.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> recording 0.038<span style="text-decoration: underline;">1</span>    0.457    0.846     58.0    -<span style="color: #BB0000;">237.</span>     616. TRUE      1</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> recording 0.058<span style="text-decoration: underline;">1</span>    0.455    0.850     70.7    -<span style="color: #BB0000;">279.</span>     718. TRUE      1</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> recording 0.058<span style="text-decoration: underline;">1</span>    0.455    0.850     70.7    -<span style="color: #BB0000;">279.</span>     718. TRUE      1</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 3 more variables: epoch_time &lt;dbl&gt;, eye &lt;chr&gt;, pupil &lt;dbl&gt;</span></span></span></code></pre></div>
-<p>Given epochs, <code><a href="../reference/plot_g3_pupil.html">plot_g3_pupil()</a></code> puts the time from the
-pulse onset on the x axis. Each eye gets its own panel, with a thin line
-per pulse and the mean drawn on top.</p>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: epoch_time &lt;dbl&gt;, pulse &lt;int&gt;, eye &lt;chr&gt;, pupil &lt;dbl&gt;</span></span></span></code></pre></div>
+<p>The onsets do not have to be sync port pulses.
+<code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> also takes a data frame with an
+<code>onset</code> column, such as the <span class="hl">trial
+onsets</span> of an experiment, and copies its other columns to the
+samples of each epoch.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">trials</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>onset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">12</span>, <span class="fl">22</span><span class="op">)</span>, condition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"a"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">trial_epochs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_epochs.html">g3_epochs</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">trials</span>, before <span class="op">=</span> <span class="fl">0.5</span>, after <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">trial_epochs</span>, <span class="va">epoch</span>, <span class="va">condition</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 3</span></span></span>
+<span><span class="co">#&gt;   epoch condition     n</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 a           175</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2 b           174</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3 a           174</span></span></code></pre></div>
+<p>An experiment script can also send events to the glasses through
+their API, each with a tag and an object. <code><a href="../reference/g3_api_events.html">g3_api_events()</a></code>
+extracts these <span class="hl">API events</span> from the event data,
+and its output can be passed to <code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> in the same
+way. The example recording has none.</p>
+<p>Given epochs, <code><a href="../reference/plot_g3_pupil.html">plot_g3_pupil()</a></code> puts the time from the
+onset on the x axis. Each eye gets its own panel, with a thin line per
+epoch and the mean drawn on top.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">ep</span><span class="op">)</span></span></code></pre></div>
-<p><img src="glasses3_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="glasses3_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="672"></p>
 <p>For models of the whole time course, such as generalised additive
 mixed models, <code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> averages the samples into
-<span class="hl">time bins</span>. Bins are counted from the pulse
-onset, and a bin where more than half of the samples are missing is left
-empty. Character columns, such as a participant or condition label, are
-dropped unless you name them in <code>by</code>, and the groups of a
-grouped tibble are kept.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<span class="hl">time bins</span>. Bins are counted from the onset, and
+a bin where more than half of the samples are missing is left empty.
+Character columns, such as a participant or condition label, are dropped
+unless you name them in <code>by</code>, and the groups of a grouped
+tibble are kept.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">binned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_downsample.html">g3_downsample</a></span><span class="op">(</span><span class="va">pupil</span>, bin <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">binned</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 13</span></span></span>
-<span><span class="co">#&gt;   recording pulse eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 14</span></span></span>
+<span><span class="co">#&gt;   recording epoch eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> recording     1 left        -<span style="color: #BB0000;">0.1</span>       4 0.048<span style="text-decoration: underline;">1</span>    0.454    0.853     65.6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> recording     1 left         0         5 0.138     0.447    0.869    162. </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> recording     1 left         0.1       4 0.228     0.454    0.866    476. </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> recording     1 left         0.2       5 0.319     0.456    0.884    115. </span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> recording     1 left         0.3       5 0.419     0.457    0.907     37.8</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> recording     1 left         0.4       5 0.519     0.414    0.848    174. </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 4 more variables: gaze3d_y &lt;dbl&gt;, gaze3d_z &lt;dbl&gt;, valid &lt;dbl&gt;, pupil &lt;dbl&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: gaze3d_y &lt;dbl&gt;, gaze3d_z &lt;dbl&gt;, valid &lt;dbl&gt;, pulse &lt;int&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   pupil &lt;dbl&gt;</span></span></span></code></pre></div>
 <p>glasses3 leaves <span class="hl">pupil preprocessing</span> to other
 packages. PupillometryR, gazer and eyeris handle blink removal,
 interpolation and baseline correction.</p>
@@ -257,15 +289,14 @@ interpolation and baseline correction.</p>
 <p><code><a href="../reference/plot_g3_gaze.html">plot_g3_gaze()</a></code> shows where the wearer looked in the
 scene camera image. The top of the plot is the top of the video
 frame.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_gaze.html">plot_g3_gaze</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span></span></code></pre></div>
-<p><img src="glasses3_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="glasses3_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/g3_gaze_angles.html">g3_gaze_angles()</a></code> turns the gaze direction of each eye
 into <span class="hl">azimuth</span> and <span class="hl">elevation</span> in degrees, relative to straight ahead of
 the glasses, and adds the <span class="hl">vergence</span> angle between
-the eyes. Angular velocity for detecting fixations and saccades can be
-computed from these columns.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+the eyes.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_gaze_angles.html">g3_gaze_angles</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
 <span><span class="va">angles</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">left_azimuth</span>, <span class="va">left_elevation</span>, <span class="va">vergence</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -278,6 +309,43 @@ computed from these columns.</p>
 <span><span class="co">#&gt;  3rd Qu.:  3.983   3rd Qu.: -5.307   3rd Qu.: 6.1301  </span></span>
 <span><span class="co">#&gt;  Max.   : 25.299   Max.   : 18.841   Max.   :39.3296  </span></span>
 <span><span class="co">#&gt;  NAs    :228       NAs    :228       NAs    :384</span></span></code></pre></div>
+<p><code><a href="../reference/g3_gaze_velocity.html">g3_gaze_velocity()</a></code> adds the <span class="hl">angular
+velocity</span> of each eye from one sample to the next, in degrees per
+second. It is not smoothed, and can be the starting point for detecting
+fixations and saccades.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">velocity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_gaze_velocity.html">g3_gaze_velocity</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
+<span><span class="va">velocity</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">left_velocity</span>, <span class="va">right_velocity</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  left_velocity      right_velocity     </span></span>
+<span><span class="co">#&gt;  Min.   :  0.2704   Min.   :   0.2612  </span></span>
+<span><span class="co">#&gt;  1st Qu.:  4.1465   1st Qu.:   3.7903  </span></span>
+<span><span class="co">#&gt;  Median :  8.6165   Median :   9.0639  </span></span>
+<span><span class="co">#&gt;  Mean   : 29.6006   Mean   :  38.8253  </span></span>
+<span><span class="co">#&gt;  3rd Qu.: 25.2244   3rd Qu.:  32.5353  </span></span>
+<span><span class="co">#&gt;  Max.   :802.9578   Max.   :1727.0960  </span></span>
+<span><span class="co">#&gt;  NAs    :286        NAs    :359</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="clock-time">Clock time<a class="anchor" aria-label="anchor" href="#clock-time"></a>
+</h2>
+<p><code><a href="../reference/g3_add_clock_time.html">g3_add_clock_time()</a></code> adds the date and time of each
+sample, from the start time stored in the recording. The <span class="hl">clock time</span> helps to align the data with other devices
+that log the time of day.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/g3_add_clock_time.html">g3_add_clock_time</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">clock_time</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 2</span></span></span>
+<span><span class="co">#&gt;     time clock_time         </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>             </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.018<span style="text-decoration: underline;">0</span> 2025-01-01 <span style="color: #949494;">12:00:00</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0.038<span style="text-decoration: underline;">1</span> 2025-01-01 <span style="color: #949494;">12:00:00</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.058<span style="text-decoration: underline;">1</span> 2025-01-01 <span style="color: #949494;">12:00:00</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.078<span style="text-decoration: underline;">2</span> 2025-01-01 <span style="color: #949494;">12:00:00</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 0.098<span style="text-decoration: underline;">2</span> 2025-01-01 <span style="color: #949494;">12:00:00</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 0.118  2025-01-01 <span style="color: #949494;">12:00:00</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="damaged-files-and-gaps">Damaged files and gaps<a class="anchor" aria-label="anchor" href="#damaged-files-and-gaps"></a>
@@ -289,7 +357,7 @@ whose compressed data are damaged cannot be read and gives an error.
 <code><a href="../reference/g3_fill_gaps.html">g3_fill_gaps()</a></code> then inserts empty rows where samples are
 missing, so the time series is evenly spaced again before
 preprocessing.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_fill_gaps.html">g3_fill_gaps</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">filled</span>, <span class="va">inserted</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
@@ -303,7 +371,7 @@ preprocessing.</p>
 <p>The glasses sample the accelerometer and gyroscope together, while
 the magnetometer runs separately at a lower rate. Each row of the <span class="hl">IMU data</span> therefore has missing values for the sensors
 that were not sampled at that moment.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">imu</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 11</span></span></span>
 <span><span class="co">#&gt;   recording    time accel_x accel_y accel_z gyro_x gyro_y gyro_z mag_x mag_y</span></span>

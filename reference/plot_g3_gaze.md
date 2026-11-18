@@ -35,7 +35,7 @@ plot_g3_gaze(
 - from, to:
 
   Time window in seconds. Defaults to all the data. For epochs, the
-  window is in seconds from the pulse onset.
+  window is in seconds from the onset.
 
 - bins:
 

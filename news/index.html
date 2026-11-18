@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">glasses3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,44 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="glasses3-020">glasses3 0.2.0<a class="anchor" aria-label="anchor" href="#glasses3-020"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-2-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-2-0"></a></h3>
+<ul><li>The sync port functions <code><a href="../reference/g3_syncport.html">g3_syncport()</a></code>, <code><a href="../reference/g3_add_syncport.html">g3_add_syncport()</a></code>, <code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> and <code><a href="../reference/plot_g3_pupil.html">plot_g3_pupil()</a></code> now use <code>direction = "in"</code> by default, the pulses the glasses receive from other equipment such as a stimulus computer. Use <code>direction = "out"</code> for the pulses the glasses send.</li>
+<li>
+<code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> numbers the epochs in a new <code>epoch</code> column. Epochs cut at sync port pulses keep the <code>pulse</code> column with the pulse number. <code><a href="../reference/plot_g3_pupil.html">plot_g3_pupil()</a></code>, <code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> and <code><a href="../reference/g3_gaze_velocity.html">g3_gaze_velocity()</a></code> use <code>epoch</code> to keep epochs apart.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-2-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> also cuts epochs at the onsets in a data frame with an <code>onset</code> column, such as the trial onsets of an experiment. Its other columns, such as a condition, are copied to the samples of each epoch. Without a <code>recording</code> column, every recording is cut at all onsets.</li>
+<li>
+<code><a href="../reference/g3_api_events.html">g3_api_events()</a></code> extracts the events sent to the glasses through their API, with their tag and object, ready to be passed to <code><a href="../reference/g3_epochs.html">g3_epochs()</a></code>.</li>
+<li>
+<code><a href="../reference/g3_gaze_velocity.html">g3_gaze_velocity()</a></code> adds the angular velocity of each eye in degrees per second.</li>
+<li>
+<code><a href="../reference/g3_add_clock_time.html">g3_add_clock_time()</a></code> adds the date and time of each sample from the start time of the recording.</li>
+<li>
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a recording counts the sync port pulses in both directions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> no longer splits a bin in two where a sync port pulse starts in data from <code><a href="../reference/g3_add_syncport.html">g3_add_syncport()</a></code>. The <code>pulse</code> column now gets the pulse of the first sample in the bin, and <code>samples</code> is an integer again.</li>
+<li>A file in the <code>meta</code> folder that is not UTF-8 text, as the API can write, no longer stops <code><a href="../reference/read_g3_info.html">read_g3_info()</a></code>, <code><a href="../reference/read_g3.html">read_g3()</a></code> and <code><a href="../reference/list_g3_recordings.html">list_g3_recordings()</a></code>. Such files are returned as raw vectors, and folders inside <code>meta</code> are skipped.</li>
+<li>Sync port signal changes without a value no longer create a pulse without an onset.</li>
+<li>
+<code><a href="../reference/read_g3_gaze.html">read_g3_gaze()</a></code>, <code><a href="../reference/read_g3_imu.html">read_g3_imu()</a></code> and <code><a href="../reference/read_g3_events.html">read_g3_events()</a></code> now take the names of the data files from <code>recording.g3</code>, as <code><a href="../reference/read_g3.html">read_g3()</a></code> already did.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-changes-0-2-0">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-0-2-0"></a></h3>
+<ul><li>
+<code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> is several times faster, and functions that work per recording are faster with many recordings.</li>
+<li>Highlighted terms in the vignette and on the website are now shown with a highlighter.</li>
+<li>The help page titles of <code><a href="../reference/g3_pupil_long.html">g3_pupil_long()</a></code> and <code><a href="../reference/list_g3_recordings.html">list_g3_recordings()</a></code> are now “Reshape pupil data to long format” and “List recordings”.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="glasses3-010">glasses3 0.1.0<a class="anchor" aria-label="anchor" href="#glasses3-010"></a></h2>
 <ul><li>Initial release.</li>
 <li>Reads Tobii Pro Glasses 3 recording folders directly from the SD card: gaze and pupil data, IMU data, events and metadata. Lines that cannot be parsed, such as the cut-off last line of an incomplete file, are skipped with a warning. A file whose compressed data are damaged gives an error.</li>
@@ -53,7 +91,8 @@
 <li>
 <code>citation("glasses3")</code> gives the reference for the package, with the version number from DESCRIPTION.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

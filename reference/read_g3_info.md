@@ -36,7 +36,8 @@ A list of class `g3_info` with these elements:
 
 - `scene_camera`, the camera calibration
 
-- `meta`, all files in the `meta` folder as character strings
+- `meta`, all files in the `meta` folder as character strings, or as raw
+  vectors for files that are not UTF-8 text
 
 ## Examples
 

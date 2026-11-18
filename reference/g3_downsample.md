@@ -41,19 +41,21 @@ g3_downsample(x, bin = 0.1, min_valid = 0.5, by = NULL)
 ## Value
 
 A tibble with one row per bin and group, starting with the grouping
-columns. Other numeric columns hold the mean of the available samples,
-and logical columns, such as `valid`, the proportion of `TRUE` samples.
-`samples` gives the number of samples in the bin. All other columns are
+columns. `samples` gives the number of samples in the bin. A `pulse`
+column gets the pulse of the first sample in the bin. Other numeric
+columns hold the mean of the available samples, and logical columns,
+such as `valid`, the proportion of `TRUE` samples. All other columns are
 dropped. A grouped tibble keeps its groups.
 
 ## Details
 
-Bins are counted from time 0, or from the pulse onset for epochs from
+Bins are counted from time 0, or from the onset for epochs from
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md), so
 that the onset falls on a bin boundary. Each bin is labelled with its
-start time. Rows are grouped by the `recording`, `pulse` and `eye`
+start time. Rows are grouped by the `recording`, `epoch` and `eye`
 columns where these exist, so the function works on the output of
 [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md),
+[`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md),
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) and
 [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md).
 Columns named in `by` are added to these groups, and so are the groups
@@ -66,7 +68,7 @@ gaze <- read_g3_gaze(g3_example())
 g3_downsample(gaze, bin = 0.1)
 #> # A tibble: 300 × 25
 #>    recording  time samples gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z
-#>    <chr>     <dbl>   <dbl>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
+#>    <chr>     <dbl>   <int>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
 #>  1 recording   0         5    0.452    0.857     69.7    -264.     660.
 #>  2 recording   0.1       5    0.449    0.867    230.     -871.    2130.
 #>  3 recording   0.2       5    0.455    0.870    371.    -1522.    3725.
@@ -86,11 +88,11 @@ g3_downsample(gaze, bin = 0.1)
 #> #   valid_left <dbl>, valid_right <dbl>, valid <dbl>
 
 rec <- read_g3(g3_example())
-ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 3)
+ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 3, direction = "out")
 g3_downsample(g3_pupil_long(ep), bin = 0.1)
-#> # A tibble: 342 × 13
-#>    recording pulse eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x
-#>    <chr>     <int> <chr>      <dbl>   <dbl>  <dbl>    <dbl>    <dbl>    <dbl>
+#> # A tibble: 342 × 14
+#>    recording epoch eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x
+#>    <chr>     <int> <chr>      <dbl>   <int>  <dbl>    <dbl>    <dbl>    <dbl>
 #>  1 recording     1 left        -0.1       4 0.0481    0.454    0.853     65.6
 #>  2 recording     1 left         0         5 0.138     0.447    0.869    162. 
 #>  3 recording     1 left         0.1       4 0.228     0.454    0.866    476. 
@@ -102,14 +104,15 @@ g3_downsample(g3_pupil_long(ep), bin = 0.1)
 #>  9 recording     1 left         0.7       5 0.819     0.372    0.666    552. 
 #> 10 recording     1 left         0.8       5 0.920     0.363    0.668    585. 
 #> # ℹ 332 more rows
-#> # ℹ 4 more variables: gaze3d_y <dbl>, gaze3d_z <dbl>, valid <dbl>, pupil <dbl>
+#> # ℹ 5 more variables: gaze3d_y <dbl>, gaze3d_z <dbl>, valid <dbl>, pulse <int>,
+#> #   pupil <dbl>
 
 gaze |>
   dplyr::mutate(participant = "P01") |>
   g3_downsample(bin = 0.1, by = "participant")
 #> # A tibble: 300 × 26
 #>    recording participant  time samples gaze2d_x gaze2d_y gaze3d_x gaze3d_y
-#>    <chr>     <chr>       <dbl>   <dbl>    <dbl>    <dbl>    <dbl>    <dbl>
+#>    <chr>     <chr>       <dbl>   <int>    <dbl>    <dbl>    <dbl>    <dbl>
 #>  1 recording P01           0         5    0.452    0.857     69.7    -264.
 #>  2 recording P01           0.1       5    0.449    0.867    230.     -871.
 #>  3 recording P01           0.2       5    0.455    0.870    371.    -1522.

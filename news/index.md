@@ -1,5 +1,83 @@
 # Changelog
 
+## glasses3 0.2.0
+
+### Breaking changes
+
+- The sync port functions
+  [`g3_syncport()`](https://mcanzi.de/glasses3/reference/g3_syncport.md),
+  [`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md),
+  [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) and
+  [`plot_g3_pupil()`](https://mcanzi.de/glasses3/reference/plot_g3_pupil.md)
+  now use `direction = "in"` by default, the pulses the glasses receive
+  from other equipment such as a stimulus computer. Use
+  `direction = "out"` for the pulses the glasses send.
+- [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md)
+  numbers the epochs in a new `epoch` column. Epochs cut at sync port
+  pulses keep the `pulse` column with the pulse number.
+  [`plot_g3_pupil()`](https://mcanzi.de/glasses3/reference/plot_g3_pupil.md),
+  [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+  and
+  [`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
+  use `epoch` to keep epochs apart.
+
+### New features
+
+- [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md)
+  also cuts epochs at the onsets in a data frame with an `onset` column,
+  such as the trial onsets of an experiment. Its other columns, such as
+  a condition, are copied to the samples of each epoch. Without a
+  `recording` column, every recording is cut at all onsets.
+- [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+  extracts the events sent to the glasses through their API, with their
+  tag and object, ready to be passed to
+  [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md).
+- [`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
+  adds the angular velocity of each eye in degrees per second.
+- [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+  adds the date and time of each sample from the start time of the
+  recording.
+- [`summary()`](https://rdrr.io/r/base/summary.html) of a recording
+  counts the sync port pulses in both directions.
+
+### Bug fixes
+
+- [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+  no longer splits a bin in two where a sync port pulse starts in data
+  from
+  [`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md).
+  The `pulse` column now gets the pulse of the first sample in the bin,
+  and `samples` is an integer again.
+- A file in the `meta` folder that is not UTF-8 text, as the API can
+  write, no longer stops
+  [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md),
+  [`read_g3()`](https://mcanzi.de/glasses3/reference/read_g3.md) and
+  [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md).
+  Such files are returned as raw vectors, and folders inside `meta` are
+  skipped.
+- Sync port signal changes without a value no longer create a pulse
+  without an onset.
+- [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md),
+  [`read_g3_imu()`](https://mcanzi.de/glasses3/reference/read_g3_imu.md)
+  and
+  [`read_g3_events()`](https://mcanzi.de/glasses3/reference/read_g3_events.md)
+  now take the names of the data files from `recording.g3`, as
+  [`read_g3()`](https://mcanzi.de/glasses3/reference/read_g3.md) already
+  did.
+
+### Other changes
+
+- [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+  is several times faster, and functions that work per recording are
+  faster with many recordings.
+- Highlighted terms in the vignette and on the website are now shown
+  with a highlighter.
+- The help page titles of
+  [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md)
+  and
+  [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md)
+  are now “Reshape pupil data to long format” and “List recordings”.
+
 ## glasses3 0.1.0
 
 - Initial release.

@@ -3,11 +3,12 @@
 Reads recordings made with the 'Tobii Pro Glasses 3' wearable eye
 tracker directly from the folder on the SD card, so 'Tobii Pro Lab' is
 not needed. Gaze, pupil diameter, inertial measurement unit and sync
-port data are read from the compressed JSON files into tibbles, along
-with the recording metadata. Samples can be aligned with sync port
-pulses and cut into epochs, gaps in the time series can be filled,
-samples can be averaged into time bins and gaze directions converted to
-angles. Pupil diameter and gaze position can be plotted.
+port data are read from the compressed JSON files into data frames,
+along with the recording metadata. Samples can be aligned with sync port
+pulses and cut into epochs around pulses, API events or any other
+onsets. Further functions fill gaps in the time series, average samples
+into time bins, add clock time and convert gaze directions to angles and
+angular velocity. Pupil diameter and gaze position can be plotted.
 
 ## Details
 
@@ -29,3 +30,8 @@ Useful links:
 
 **Maintainer**: Massimiliano Canzi <massimiliano.canzi@uni-konstanz.de>
 ([ORCID](https://orcid.org/0000-0001-6124-0321)) \[copyright holder\]
+
+Authors:
+
+- Massimiliano Canzi <massimiliano.canzi@uni-konstanz.de>
+  ([ORCID](https://orcid.org/0000-0001-6124-0321)) \[copyright holder\]

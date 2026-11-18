@@ -7,7 +7,7 @@ pulses of their own recording through the `recording` column.
 ## Usage
 
 ``` r
-g3_add_syncport(x, events, direction = c("out", "in"))
+g3_add_syncport(x, events, direction = c("in", "out"))
 ```
 
 ## Arguments
@@ -26,8 +26,9 @@ g3_add_syncport(x, events, direction = c("out", "in"))
 
 - direction:
 
-  `"out"` for the signal sent by the glasses, `"in"` for the signal
-  received from external equipment.
+  `"in"` for the signal received from external equipment, such as
+  stimulus onsets sent by a stimulus computer, or `"out"` for the signal
+  sent by the glasses.
 
 ## Value
 
@@ -40,7 +41,7 @@ grouped tibble, the result has the same groups.
 
 ``` r
 rec <- read_g3(g3_example())
-gaze <- g3_add_syncport(rec$gaze, rec$events)
+gaze <- g3_add_syncport(rec$gaze, rec$events, direction = "out")
 gaze |>
   dplyr::filter(syncport == 1) |>
   dplyr::select(time, pulse, pulse_time)

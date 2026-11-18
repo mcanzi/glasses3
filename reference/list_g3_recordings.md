@@ -1,4 +1,4 @@
-# Find recordings in a folder
+# List recordings
 
 Searches a folder, such as the root of the Glasses 3 SD card, for
 recording folders.

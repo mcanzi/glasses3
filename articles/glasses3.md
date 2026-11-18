@@ -60,7 +60,7 @@ summary(rec)
 #> Right pupil (mm):
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
 #>   4.629   6.001   6.192   6.152   6.312   7.419     295 
-#> Sync port pulses (out): 5
+#> Sync port pulses: 0 in, 5 out
 ```
 
 The `valid` column says whether a sample has a gaze point. The glasses
@@ -99,23 +99,27 @@ pulses, and the plots draw one panel per recording.
 
 ## Pupil diameter
 
+The sync port connects the glasses to other equipment. A stimulus
+computer can send a pulse at each stimulus onset, which the glasses
+record with the direction `"in"`. The glasses can also send pulses that
+another device records, with the direction `"out"`. The functions use
+`"in"` by default. The example recording only holds pulses sent by the
+glasses, so the examples here use `direction = "out"`.
+
 ``` r
 
-plot_g3_pupil(rec)
+plot_g3_pupil(rec, direction = "out")
 ```
 
-![](glasses3_files/figure-html/unnamed-chunk-6-1.png)
+![](glasses3_files/figure-html/unnamed-chunk-7-1.png)
 
-The grey areas mark sync port pulses. The sync port connects the glasses
-to other equipment. A stimulus computer can send a pulse at each
-stimulus onset, or the glasses can send pulses that another device
-records.
+The grey areas mark the sync port pulses.
 [`g3_syncport()`](https://mcanzi.de/glasses3/reference/g3_syncport.md)
-lists the pulses with their onsets and offsets.
+lists them with their onsets and offsets.
 
 ``` r
 
-g3_syncport(rec$events)
+g3_syncport(rec$events, direction = "out")
 #> # A tibble: 5 × 5
 #>   recording pulse   onset offset duration
 #>   <chr>     <int>   <dbl>  <dbl>    <dbl>
@@ -134,7 +138,7 @@ pulses.
 
 ``` r
 
-tagged <- g3_add_syncport(rec$gaze, rec$events)
+tagged <- g3_add_syncport(rec$gaze, rec$events, direction = "out")
 tagged |>
   filter(syncport == 1) |>
   select(time, pulse, pulse_time)
@@ -161,27 +165,27 @@ changed.
 
 ``` r
 
-plot_g3_pupil(rec, smooth = 1)
+plot_g3_pupil(rec, direction = "out", smooth = 1)
 ```
 
-![](glasses3_files/figure-html/unnamed-chunk-9-1.png)
+![](glasses3_files/figure-html/unnamed-chunk-10-1.png)
 
 ## Epochs
 
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) cuts
-the samples into epochs around each pulse onset and adds the time
-relative to the onset. After
+the samples into epochs around each pulse onset. It numbers the epochs
+in the `epoch` column and adds the time relative to the onset. After
 [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md),
 there is one row per sample and eye, which suits ggplot2 and
 mixed-effects models.
 
 ``` r
 
-ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5)
+ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5, direction = "out")
 pupil <- g3_pupil_long(ep)
 head(pupil)
-#> # A tibble: 6 × 12
-#>   recording   time gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z valid pulse
+#> # A tibble: 6 × 13
+#>   recording   time gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z valid epoch
 #>   <chr>      <dbl>    <dbl>    <dbl>    <dbl>    <dbl>    <dbl> <lgl> <int>
 #> 1 recording 0.0180    0.460    0.842     49.0    -208.     549. TRUE      1
 #> 2 recording 0.0180    0.460    0.842     49.0    -208.     549. TRUE      1
@@ -189,44 +193,72 @@ head(pupil)
 #> 4 recording 0.0381    0.457    0.846     58.0    -237.     616. TRUE      1
 #> 5 recording 0.0581    0.455    0.850     70.7    -279.     718. TRUE      1
 #> 6 recording 0.0581    0.455    0.850     70.7    -279.     718. TRUE      1
-#> # ℹ 3 more variables: epoch_time <dbl>, eye <chr>, pupil <dbl>
+#> # ℹ 4 more variables: epoch_time <dbl>, pulse <int>, eye <chr>, pupil <dbl>
 ```
+
+The onsets do not have to be sync port pulses.
+[`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) also
+takes a data frame with an `onset` column, such as the trial onsets of
+an experiment, and copies its other columns to the samples of each
+epoch.
+
+``` r
+
+trials <- data.frame(onset = c(2, 12, 22), condition = c("a", "b", "a"))
+trial_epochs <- g3_epochs(rec$gaze, trials, before = 0.5, after = 3)
+count(trial_epochs, epoch, condition)
+#> # A tibble: 3 × 3
+#>   epoch condition     n
+#>   <int> <chr>     <int>
+#> 1     1 a           175
+#> 2     2 b           174
+#> 3     3 a           174
+```
+
+An experiment script can also send events to the glasses through their
+API, each with a tag and an object.
+[`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+extracts these API events from the event data, and its output can be
+passed to
+[`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) in
+the same way. The example recording has none.
 
 Given epochs,
 [`plot_g3_pupil()`](https://mcanzi.de/glasses3/reference/plot_g3_pupil.md)
-puts the time from the pulse onset on the x axis. Each eye gets its own
-panel, with a thin line per pulse and the mean drawn on top.
+puts the time from the onset on the x axis. Each eye gets its own panel,
+with a thin line per epoch and the mean drawn on top.
 
 ``` r
 
 plot_g3_pupil(ep)
 ```
 
-![](glasses3_files/figure-html/unnamed-chunk-11-1.png)
+![](glasses3_files/figure-html/unnamed-chunk-13-1.png)
 
 For models of the whole time course, such as generalised additive mixed
 models,
 [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
-averages the samples into time bins. Bins are counted from the pulse
-onset, and a bin where more than half of the samples are missing is left
-empty. Character columns, such as a participant or condition label, are
-dropped unless you name them in `by`, and the groups of a grouped tibble
-are kept.
+averages the samples into time bins. Bins are counted from the onset,
+and a bin where more than half of the samples are missing is left empty.
+Character columns, such as a participant or condition label, are dropped
+unless you name them in `by`, and the groups of a grouped tibble are
+kept.
 
 ``` r
 
 binned <- g3_downsample(pupil, bin = 0.1)
 head(binned)
-#> # A tibble: 6 × 13
-#>   recording pulse eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x
-#>   <chr>     <int> <chr>      <dbl>   <dbl>  <dbl>    <dbl>    <dbl>    <dbl>
+#> # A tibble: 6 × 14
+#>   recording epoch eye   epoch_time samples   time gaze2d_x gaze2d_y gaze3d_x
+#>   <chr>     <int> <chr>      <dbl>   <int>  <dbl>    <dbl>    <dbl>    <dbl>
 #> 1 recording     1 left        -0.1       4 0.0481    0.454    0.853     65.6
 #> 2 recording     1 left         0         5 0.138     0.447    0.869    162. 
 #> 3 recording     1 left         0.1       4 0.228     0.454    0.866    476. 
 #> 4 recording     1 left         0.2       5 0.319     0.456    0.884    115. 
 #> 5 recording     1 left         0.3       5 0.419     0.457    0.907     37.8
 #> 6 recording     1 left         0.4       5 0.519     0.414    0.848    174. 
-#> # ℹ 4 more variables: gaze3d_y <dbl>, gaze3d_z <dbl>, valid <dbl>, pupil <dbl>
+#> # ℹ 5 more variables: gaze3d_y <dbl>, gaze3d_z <dbl>, valid <dbl>, pulse <int>,
+#> #   pupil <dbl>
 ```
 
 glasses3 leaves pupil preprocessing to other packages. PupillometryR,
@@ -244,13 +276,12 @@ plot is the top of the video frame.
 plot_g3_gaze(rec)
 ```
 
-![](glasses3_files/figure-html/unnamed-chunk-13-1.png)
+![](glasses3_files/figure-html/unnamed-chunk-15-1.png)
 
 [`g3_gaze_angles()`](https://mcanzi.de/glasses3/reference/g3_gaze_angles.md)
 turns the gaze direction of each eye into azimuth and elevation in
 degrees, relative to straight ahead of the glasses, and adds the
-vergence angle between the eyes. Angular velocity for detecting
-fixations and saccades can be computed from these columns.
+vergence angle between the eyes.
 
 ``` r
 
@@ -266,6 +297,50 @@ angles |>
 #>  3rd Qu.:  3.983   3rd Qu.: -5.307   3rd Qu.: 6.1301  
 #>  Max.   : 25.299   Max.   : 18.841   Max.   :39.3296  
 #>  NAs    :228       NAs    :228       NAs    :384
+```
+
+[`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
+adds the angular velocity of each eye from one sample to the next, in
+degrees per second. It is not smoothed, and can be the starting point
+for detecting fixations and saccades.
+
+``` r
+
+velocity <- g3_gaze_velocity(rec$gaze)
+velocity |>
+  select(left_velocity, right_velocity) |>
+  summary()
+#>  left_velocity      right_velocity     
+#>  Min.   :  0.2704   Min.   :   0.2612  
+#>  1st Qu.:  4.1465   1st Qu.:   3.7903  
+#>  Median :  8.6165   Median :   9.0639  
+#>  Mean   : 29.6006   Mean   :  38.8253  
+#>  3rd Qu.: 25.2244   3rd Qu.:  32.5353  
+#>  Max.   :802.9578   Max.   :1727.0960  
+#>  NAs    :286        NAs    :359
+```
+
+## Clock time
+
+[`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+adds the date and time of each sample, from the start time stored in the
+recording. The clock time helps to align the data with other devices
+that log the time of day.
+
+``` r
+
+g3_add_clock_time(rec$gaze, rec) |>
+  select(time, clock_time) |>
+  head()
+#> # A tibble: 6 × 2
+#>     time clock_time         
+#>    <dbl> <dttm>             
+#> 1 0.0180 2025-01-01 12:00:00
+#> 2 0.0381 2025-01-01 12:00:00
+#> 3 0.0581 2025-01-01 12:00:00
+#> 4 0.0782 2025-01-01 12:00:00
+#> 5 0.0982 2025-01-01 12:00:00
+#> 6 0.118  2025-01-01 12:00:00
 ```
 
 ## Damaged files and gaps

@@ -3,12 +3,12 @@
 Turns the sync port signal changes in the event data into one row per
 pulse, where a pulse runs from the signal going high (1) to it going low
 (0) again. With several recordings, pulses are numbered within each
-recording.
+recording. Signal changes without a time or value are ignored.
 
 ## Usage
 
 ``` r
-g3_syncport(events, direction = c("out", "in"))
+g3_syncport(events, direction = c("in", "out"))
 ```
 
 ## Arguments
@@ -20,8 +20,9 @@ g3_syncport(events, direction = c("out", "in"))
 
 - direction:
 
-  `"out"` for the signal sent by the glasses, `"in"` for the signal
-  received from external equipment.
+  `"in"` for the signal received from external equipment, such as
+  stimulus onsets sent by a stimulus computer, or `"out"` for the signal
+  sent by the glasses.
 
 ## Value
 
@@ -34,7 +35,7 @@ grouped tibble are kept if their columns are still in the result.
 
 ``` r
 events <- read_g3_events(g3_example())
-g3_syncport(events)
+g3_syncport(events, direction = "out")
 #> # A tibble: 5 × 5
 #>   recording pulse   onset offset duration
 #>   <chr>     <int>   <dbl>  <dbl>    <dbl>

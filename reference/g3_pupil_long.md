@@ -1,4 +1,4 @@
-# Pupil data in long format
+# Reshape pupil data to long format
 
 Reshapes the pupil columns of gaze data to one row per sample and eye,
 which suits plotting and mixed-effects models.
@@ -20,7 +20,7 @@ g3_pupil_long(gaze)
 ## Value
 
 A tibble with the non-eye columns of `gaze` (such as `recording`,
-`time`, `pulse` or `epoch_time`, if present), plus `eye` (`"left"` or
+`time`, `epoch` or `epoch_time`, if present), plus `eye` (`"left"` or
 `"right"`) and `pupil`. Groups of a grouped tibble are kept if their
 columns are still in the result.
 

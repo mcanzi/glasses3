@@ -9,9 +9,10 @@ card, so Tobii Pro Lab is not needed.
 The glasses store each data stream as gzipped JSON with one record per
 line (`gazedata.gz`, `imudata.gz` and `eventdata.gz`). glasses3 turns
 gaze, pupil diameter, IMU and sync port data into tibbles and reads the
-recording metadata. Samples are matched to sync port pulses, so the data
-can be cut into epochs around stimuli. Plots show pupil diameter over
-time and gaze position in the scene camera image.
+recording metadata. Samples are matched to sync port pulses, and the
+data can be cut into epochs around pulses, API events or any other
+stimulus onsets. Plots show pupil diameter over time and gaze position
+in the scene camera image.
 
 ## Installation
 
@@ -37,11 +38,22 @@ plot_g3_gaze(rec, type = "density")
 
 epochs <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 5)
 plot_g3_pupil(epochs)
+
+trials <- data.frame(onset = c(2, 12, 22), condition = c("a", "b", "a"))
+trial_epochs <- g3_epochs(rec$gaze, trials, before = 0.5, after = 5)
 pupil <- g3_pupil_long(epochs)
 binned <- g3_downsample(pupil, bin = 0.1)
 
 gaze <- g3_gaze_angles(rec$gaze)
+gaze <- g3_gaze_velocity(gaze)
+gaze <- g3_add_clock_time(gaze, rec)
 ```
+
+The sync port functions use the pulses the glasses receive from other
+equipment (`direction = "in"`) by default. Epochs can also be cut at API
+events from
+[`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+or at any table of onsets, whose other columns are copied to the epochs.
 
 The package comes with a 30-second example recording, found with
 [`g3_example()`](https://mcanzi.de/glasses3/reference/g3_example.md).
@@ -103,18 +115,20 @@ endorsed by Tobii.
 - [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md)
   : Read recording metadata
 - [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md)
-  : Find recordings in a folder
+  : List recordings
 
-## Sync port and epochs
+## Events and epochs
 
 - [`g3_syncport()`](https://mcanzi.de/glasses3/reference/g3_syncport.md)
   : Extract sync port pulses
+- [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+  : Extract API events
 - [`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md)
   : Add sync port information to samples
 - [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) :
-  Cut samples into epochs around sync port pulses
+  Cut samples into epochs
 - [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md)
-  : Pupil data in long format
+  : Reshape pupil data to long format
 
 ## Processing
 
@@ -122,6 +136,10 @@ endorsed by Tobii.
   : Insert rows for missing samples
 - [`g3_gaze_angles()`](https://mcanzi.de/glasses3/reference/g3_gaze_angles.md)
   : Gaze angles and vergence
+- [`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
+  : Angular gaze velocity
+- [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+  : Add clock time to samples
 - [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
   : Downsample to fixed time bins
 

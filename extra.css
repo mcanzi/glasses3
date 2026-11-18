@@ -119,6 +119,13 @@ pre .r-out, pre .r-wrn, pre .r-msg { color: var(--muted); }
 .table > :not(caption) > * > * { border-color: var(--vine); }
 .text-muted, .nav-text.text-muted { color: var(--muted) !important; }
 
+.hl {
+  background: rgba(242, 145, 122, 0.25);
+  color: inherit;
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+
 #toc .nav-link { color: var(--muted); }
 #toc .nav-link.active, #toc .nav-link:hover { color: var(--pandan); }
 aside h2, aside h3 { -webkit-text-fill-color: currentColor; background: none; }

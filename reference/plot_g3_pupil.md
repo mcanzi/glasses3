@@ -13,7 +13,7 @@ plot_g3_pupil(
   eyes = c("left", "right"),
   from = NULL,
   to = NULL,
-  direction = c("out", "in"),
+  direction = c("in", "out"),
   smooth = NULL
 )
 
@@ -45,7 +45,7 @@ plot(x, ...)
 - from, to:
 
   Time window in seconds. Defaults to all the data. For epochs, the
-  window is in seconds from the pulse onset.
+  window is in seconds from the onset.
 
 - direction:
 
@@ -57,7 +57,7 @@ plot(x, ...)
   Width in seconds of a running median drawn over the raw trace, or
   `NULL` (the default) for none. Missing samples are ignored, and the
   line is left out where more than half of the window is missing. For
-  epochs, each pulse is smoothed before the mean is taken. Only the plot
+  epochs, each epoch is smoothed before the mean is taken. Only the plot
   is smoothed.
 
 - ...:
@@ -76,9 +76,9 @@ this plot and returns the recording invisibly.
 
 If `x` comes from
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md), the
-time axis is the time from the pulse onset instead. Each eye gets its
-own panel, with a thin line for every pulse and a thick line for the
-mean across pulses.
+time axis is the time from the onset instead. Each eye gets its own
+panel, with a thin line for every epoch and a thick line for the mean
+across epochs.
 
 The eye colours and the theme are described in
 [`theme_g3()`](https://mcanzi.de/glasses3/reference/theme_g3.md).
@@ -87,13 +87,13 @@ The eye colours and the theme are described in
 
 ``` r
 rec <- read_g3(g3_example())
-plot_g3_pupil(rec)
+plot_g3_pupil(rec, direction = "out")
 
 plot_g3_pupil(rec$gaze, eyes = "left", from = 5, to = 15)
 
-plot_g3_pupil(rec, smooth = 1)
+plot_g3_pupil(rec, direction = "out", smooth = 1)
 
 
-epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1)
+epochs <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1, direction = "out")
 plot_g3_pupil(epochs)
 ```

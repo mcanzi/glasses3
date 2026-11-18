@@ -13,18 +13,20 @@
 - [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md)
   : Read recording metadata
 - [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md)
-  : Find recordings in a folder
+  : List recordings
 
-## Sync port and epochs
+## Events and epochs
 
 - [`g3_syncport()`](https://mcanzi.de/glasses3/reference/g3_syncport.md)
   : Extract sync port pulses
+- [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+  : Extract API events
 - [`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md)
   : Add sync port information to samples
 - [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) :
-  Cut samples into epochs around sync port pulses
+  Cut samples into epochs
 - [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md)
-  : Pupil data in long format
+  : Reshape pupil data to long format
 
 ## Processing
 
@@ -32,6 +34,10 @@
   : Insert rows for missing samples
 - [`g3_gaze_angles()`](https://mcanzi.de/glasses3/reference/g3_gaze_angles.md)
   : Gaze angles and vergence
+- [`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
+  : Angular gaze velocity
+- [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+  : Add clock time to samples
 - [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
   : Downsample to fixed time bins
 

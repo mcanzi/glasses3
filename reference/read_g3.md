@@ -3,7 +3,8 @@
 Reads a recording folder as written to the SD card by the Tobii Pro
 Glasses 3. The folder contains `recording.g3`, `gazedata.gz`,
 `imudata.gz`, `eventdata.gz` and a `meta` folder. The scene video is not
-needed.
+needed. All readers take the names of the data files from
+`recording.g3`, and use these usual names if it does not give them.
 
 ## Usage
 
@@ -73,7 +74,7 @@ summary(rec)
 #> Right pupil (mm):
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.     NAs 
 #>   4.629   6.001   6.192   6.152   6.312   7.419     295 
-#> Sync port pulses (out): 5
+#> Sync port pulses: 0 in, 5 out
 rec$gaze
 #> # A tibble: 1,497 × 24
 #>    recording   time gaze2d_x gaze2d_y gaze3d_x gaze3d_y gaze3d_z left_origin_x
@@ -95,5 +96,5 @@ rec$gaze
 #> #   right_origin_z <dbl>, right_direction_x <dbl>, right_direction_y <dbl>,
 #> #   right_direction_z <dbl>, right_pupil <dbl>, valid_left <lgl>,
 #> #   valid_right <lgl>, valid <lgl>
-plot(rec)
+plot(rec, direction = "out")
 ```
