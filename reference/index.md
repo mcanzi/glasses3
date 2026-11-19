@@ -32,12 +32,16 @@
 
 - [`g3_fill_gaps()`](https://mcanzi.de/glasses3/reference/g3_fill_gaps.md)
   : Insert rows for missing samples
+- [`g3_quality()`](https://mcanzi.de/glasses3/reference/g3_quality.md) :
+  Data quality per recording or epoch
 - [`g3_gaze_angles()`](https://mcanzi.de/glasses3/reference/g3_gaze_angles.md)
   : Gaze angles and vergence
 - [`g3_gaze_velocity()`](https://mcanzi.de/glasses3/reference/g3_gaze_velocity.md)
   : Angular gaze velocity
 - [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
   : Add clock time to samples
+- [`g3_add_frame()`](https://mcanzi.de/glasses3/reference/g3_add_frame.md)
+  : Add scene video frame numbers
 - [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
   : Downsample to fixed time bins
 

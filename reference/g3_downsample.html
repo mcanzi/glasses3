@@ -13,7 +13,7 @@ has to account for."><meta property="og:image" content="https://mcanzi.de/glasse
 
     <a class="navbar-brand me-2" href="../index.html">glasses3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,8 +80,9 @@ condition column. They are kept in the result.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with one row per bin and group, starting with the
-grouping columns. <code>samples</code> gives the number of samples in the bin. A
-<code>pulse</code> column gets the pulse of the first sample in the bin. Other
+grouping columns. <code>samples</code> gives the number of samples in the bin.
+<code>pulse</code> and <code>frame</code> columns get the value of the first sample in the
+bin. Other
 numeric columns hold the mean of the available samples, and logical
 columns, such as <code>valid</code>, the proportion of <code>TRUE</code> samples. All other
 columns are dropped. A grouped tibble keeps its groups.</p>

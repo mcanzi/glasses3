@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">glasses3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -258,6 +258,22 @@ epoch and the mean drawn on top.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_pupil.html">plot_g3_pupil</a></span><span class="op">(</span><span class="va">ep</span><span class="op">)</span></span></code></pre></div>
 <p><img src="glasses3_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="672"></p>
+<p>Before analysis, <code><a href="../reference/g3_quality.html">g3_quality()</a></code> shows how much data each
+epoch holds: the number of samples, the proportion with a gaze point and
+with data for each eye, and the <span class="hl">longest gap</span>
+without a gaze point. Epochs with too much missing data can then be
+dropped.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">quality</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_quality.html">g3_quality</a></span><span class="op">(</span><span class="va">ep</span><span class="op">)</span></span>
+<span><span class="va">quality</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 8</span></span></span>
+<span><span class="co">#&gt;   recording epoch samples duration valid valid_left valid_right max_gap</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> recording     1     253     5.05 0.913      0.862       0.842   0.220</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> recording     2     275     5.49 0.92       0.865       0.855   0.220</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> recording     3     275     5.49 0.92       0.844       0.898   0.220</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> recording     4     274     5.47 0.934      0.901       0.653   0.180</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> recording     5     275     5.49 0.909      0.873       0.869   0.260</span></span></code></pre></div>
 <p>For models of the whole time course, such as generalised additive
 mixed models, <code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> averages the samples into
 <span class="hl">time bins</span>. Bins are counted from the onset, and
@@ -265,7 +281,7 @@ a bin where more than half of the samples are missing is left empty.
 Character columns, such as a participant or condition label, are dropped
 unless you name them in <code>by</code>, and the groups of a grouped
 tibble are kept.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">binned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_downsample.html">g3_downsample</a></span><span class="op">(</span><span class="va">pupil</span>, bin <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">binned</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 14</span></span></span>
@@ -289,14 +305,14 @@ interpolation and baseline correction.</p>
 <p><code><a href="../reference/plot_g3_gaze.html">plot_g3_gaze()</a></code> shows where the wearer looked in the
 scene camera image. The top of the plot is the top of the video
 frame.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_g3_gaze.html">plot_g3_gaze</a></span><span class="op">(</span><span class="va">rec</span><span class="op">)</span></span></code></pre></div>
-<p><img src="glasses3_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="672"></p>
+<p><img src="glasses3_files/figure-html/unnamed-chunk-16-1.png" class="r-plt" alt="" width="672"></p>
 <p><code><a href="../reference/g3_gaze_angles.html">g3_gaze_angles()</a></code> turns the gaze direction of each eye
 into <span class="hl">azimuth</span> and <span class="hl">elevation</span> in degrees, relative to straight ahead of
 the glasses, and adds the <span class="hl">vergence</span> angle between
 the eyes.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_gaze_angles.html">g3_gaze_angles</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
 <span><span class="va">angles</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">left_azimuth</span>, <span class="va">left_elevation</span>, <span class="va">vergence</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -313,7 +329,7 @@ the eyes.</p>
 velocity</span> of each eye from one sample to the next, in degrees per
 second. It is not smoothed, and can be the starting point for detecting
 fixations and saccades.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">velocity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_gaze_velocity.html">g3_gaze_velocity</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
 <span><span class="va">velocity</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">left_velocity</span>, <span class="va">right_velocity</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -333,7 +349,7 @@ fixations and saccades.</p>
 <p><code><a href="../reference/g3_add_clock_time.html">g3_add_clock_time()</a></code> adds the date and time of each
 sample, from the start time stored in the recording. The <span class="hl">clock time</span> helps to align the data with other devices
 that log the time of day.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/g3_add_clock_time.html">g3_add_clock_time</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span>, <span class="va">rec</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">clock_time</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -348,6 +364,29 @@ that log the time of day.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 0.118  2025-01-01 <span style="color: #949494;">12:00:00</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="scene-video">Scene video<a class="anchor" aria-label="anchor" href="#scene-video"></a>
+</h2>
+<p>The scene camera films at 25 frames per second.
+<code><a href="../reference/g3_add_frame.html">g3_add_frame()</a></code> adds the number of the <span class="hl">video frame</span> shown at each sample, counted from 0, so
+that codes made frame by frame from the video, such as areas of
+interest, can be joined to the samples. The first frame is taken to
+start with the recording. If an event visible in the video shows
+otherwise, set <code>start</code> to the time of the first frame.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/g3_add_frame.html">g3_add_frame</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">frame</span>, <span class="va">gaze2d_x</span>, <span class="va">gaze2d_y</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 4</span></span></span>
+<span><span class="co">#&gt;     time frame gaze2d_x gaze2d_y</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> 0.018<span style="text-decoration: underline;">0</span>     0    0.460    0.842</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> 0.038<span style="text-decoration: underline;">1</span>     0    0.457    0.846</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> 0.058<span style="text-decoration: underline;">1</span>     1    0.455    0.850</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> 0.078<span style="text-decoration: underline;">2</span>     1    0.445    0.873</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> 0.098<span style="text-decoration: underline;">2</span>     2    0.444    0.876</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> 0.118      2    0.445    0.869</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="damaged-files-and-gaps">Damaged files and gaps<a class="anchor" aria-label="anchor" href="#damaged-files-and-gaps"></a>
 </h2>
 <p>A file that was cut off, for example by an interrupted copy from the
@@ -357,7 +396,7 @@ whose compressed data are damaged cannot be read and gives an error.
 <code><a href="../reference/g3_fill_gaps.html">g3_fill_gaps()</a></code> then inserts empty rows where samples are
 missing, so the time series is evenly spaced again before
 preprocessing.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">filled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/g3_fill_gaps.html">g3_fill_gaps</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">gaze</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">filled</span>, <span class="va">inserted</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
@@ -371,7 +410,7 @@ preprocessing.</p>
 <p>The glasses sample the accelerometer and gyroscope together, while
 the magnetometer runs separately at a lower rate. Each row of the <span class="hl">IMU data</span> therefore has missing values for the sensors
 that were not sampled at that moment.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rec</span><span class="op">$</span><span class="va">imu</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 11</span></span></span>
 <span><span class="co">#&gt;   recording    time accel_x accel_y accel_z gyro_x gyro_y gyro_z mag_x mag_y</span></span>

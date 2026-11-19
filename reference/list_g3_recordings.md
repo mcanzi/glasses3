@@ -23,7 +23,9 @@ list_g3_recordings(path, recursive = TRUE)
 
 A tibble with one row per recording: `recording` (the folder name, as
 used in the `recording` column by the readers), `path`, `name`,
-`participant`, `created` and `duration`. Pass it to
+`participant`, `created` and `duration`. A recording whose
+`recording.g3` cannot be read is listed with `NA` metadata and a
+warning. Pass it to
 [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md),
 [`read_g3_imu()`](https://mcanzi.de/glasses3/reference/read_g3_imu.md)
 or

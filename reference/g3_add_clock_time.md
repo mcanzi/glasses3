@@ -38,8 +38,8 @@ g3_add_clock_time(x, recordings)
 [`format()`](https://rdrr.io/r/base/format.html) with the `timezone`
 from
 [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md)
-to show local time. If `x` is a grouped tibble, the result has the same
-groups.
+to show local time. Recordings without a start time get `NA`, with a
+warning. If `x` is a grouped tibble, the result has the same groups.
 
 ## Examples
 

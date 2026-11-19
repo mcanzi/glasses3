@@ -1,5 +1,52 @@
 # Changelog
 
+## glasses3 (development version)
+
+### New features
+
+- [`g3_quality()`](https://mcanzi.de/glasses3/reference/g3_quality.md)
+  summarises data quality per recording or epoch: the number of samples,
+  the proportion with a gaze point and with data for each eye, and the
+  longest time without a gaze point. It helps to find trials with too
+  much missing data.
+- [`g3_add_frame()`](https://mcanzi.de/glasses3/reference/g3_add_frame.md)
+  adds the number of the scene video frame shown at each sample, for
+  matching samples to codes made from the video.
+  [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+  keeps the frame of the first sample in each bin.
+
+### Bug fixes
+
+- [`g3_fill_gaps()`](https://mcanzi.de/glasses3/reference/g3_fill_gaps.md)
+  no longer fails on data with duplicated rows. The sampling rate, also
+  shown by [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html), is now worked out
+  from the intervals between distinct timestamps. An infinite `rate`
+  gives an error.
+- [`plot_g3_pupil()`](https://mcanzi.de/glasses3/reference/plot_g3_pupil.md)
+  and
+  [`plot_g3_gaze()`](https://mcanzi.de/glasses3/reference/plot_g3_gaze.md)
+  no longer fail when some samples have no time, and
+  [`summary()`](https://rdrr.io/r/base/summary.html) now gives the
+  largest gap for such data.
+- A byte order mark at the start of a data file or of `recording.g3` is
+  ignored.
+- A damaged `recording.g3` gives a clear error in
+  [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md)
+  and [`read_g3()`](https://mcanzi.de/glasses3/reference/read_g3.md).
+  [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md)
+  lists such recordings without metadata, with a warning, and the
+  readers use the usual file names for them.
+- A data file that is a ZIP archive gives a clear error.
+- Columns of the wrong type, such as a `time` column holding text, give
+  an error naming the column.
+- [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+  warns about recordings without a start time instead of returning `NA`
+  without a warning.
+- [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
+  gives a clear error when the `data` column holds text that is not
+  JSON, and is faster with many events.
+
 ## glasses3 0.2.0
 
 ### Breaking changes

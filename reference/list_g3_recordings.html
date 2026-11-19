@@ -9,7 +9,7 @@ recording folders."><meta property="og:image" content="https://mcanzi.de/glasses
 
     <a class="navbar-brand me-2" href="../index.html">glasses3</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,9 @@ recording folders.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A tibble with one row per recording: <code>recording</code> (the folder
 name, as used in the <code>recording</code> column by the readers), <code>path</code>, <code>name</code>,
-<code>participant</code>, <code>created</code> and <code>duration</code>. Pass it to <code><a href="read_g3_gaze.html">read_g3_gaze()</a></code>,
+<code>participant</code>, <code>created</code> and <code>duration</code>. A recording whose
+<code>recording.g3</code> cannot be read is listed with <code>NA</code> metadata and a
+warning. Pass it to <code><a href="read_g3_gaze.html">read_g3_gaze()</a></code>,
 <code><a href="read_g3_imu.html">read_g3_imu()</a></code> or <code><a href="read_g3_events.html">read_g3_events()</a></code> to read all recordings at once.</p>
     </div>
 

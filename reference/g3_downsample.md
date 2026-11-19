@@ -41,11 +41,11 @@ g3_downsample(x, bin = 0.1, min_valid = 0.5, by = NULL)
 ## Value
 
 A tibble with one row per bin and group, starting with the grouping
-columns. `samples` gives the number of samples in the bin. A `pulse`
-column gets the pulse of the first sample in the bin. Other numeric
-columns hold the mean of the available samples, and logical columns,
-such as `valid`, the proportion of `TRUE` samples. All other columns are
-dropped. A grouped tibble keeps its groups.
+columns. `samples` gives the number of samples in the bin. `pulse` and
+`frame` columns get the value of the first sample in the bin. Other
+numeric columns hold the mean of the available samples, and logical
+columns, such as `valid`, the proportion of `TRUE` samples. All other
+columns are dropped. A grouped tibble keeps its groups.
 
 ## Details
 

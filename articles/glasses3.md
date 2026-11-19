@@ -235,6 +235,27 @@ plot_g3_pupil(ep)
 
 ![](glasses3_files/figure-html/unnamed-chunk-13-1.png)
 
+Before analysis,
+[`g3_quality()`](https://mcanzi.de/glasses3/reference/g3_quality.md)
+shows how much data each epoch holds: the number of samples, the
+proportion with a gaze point and with data for each eye, and the longest
+gap without a gaze point. Epochs with too much missing data can then be
+dropped.
+
+``` r
+
+quality <- g3_quality(ep)
+quality
+#> # A tibble: 5 × 8
+#>   recording epoch samples duration valid valid_left valid_right max_gap
+#>   <chr>     <int>   <int>    <dbl> <dbl>      <dbl>       <dbl>   <dbl>
+#> 1 recording     1     253     5.05 0.913      0.862       0.842   0.220
+#> 2 recording     2     275     5.49 0.92       0.865       0.855   0.220
+#> 3 recording     3     275     5.49 0.92       0.844       0.898   0.220
+#> 4 recording     4     274     5.47 0.934      0.901       0.653   0.180
+#> 5 recording     5     275     5.49 0.909      0.873       0.869   0.260
+```
+
 For models of the whole time course, such as generalised additive mixed
 models,
 [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
@@ -276,7 +297,7 @@ plot is the top of the video frame.
 plot_g3_gaze(rec)
 ```
 
-![](glasses3_files/figure-html/unnamed-chunk-15-1.png)
+![](glasses3_files/figure-html/unnamed-chunk-16-1.png)
 
 [`g3_gaze_angles()`](https://mcanzi.de/glasses3/reference/g3_gaze_angles.md)
 turns the gaze direction of each eye into azimuth and elevation in
@@ -341,6 +362,32 @@ g3_add_clock_time(rec$gaze, rec) |>
 #> 4 0.0782 2025-01-01 12:00:00
 #> 5 0.0982 2025-01-01 12:00:00
 #> 6 0.118  2025-01-01 12:00:00
+```
+
+## Scene video
+
+The scene camera films at 25 frames per second.
+[`g3_add_frame()`](https://mcanzi.de/glasses3/reference/g3_add_frame.md)
+adds the number of the video frame shown at each sample, counted from 0,
+so that codes made frame by frame from the video, such as areas of
+interest, can be joined to the samples. The first frame is taken to
+start with the recording. If an event visible in the video shows
+otherwise, set `start` to the time of the first frame.
+
+``` r
+
+g3_add_frame(rec$gaze) |>
+  select(time, frame, gaze2d_x, gaze2d_y) |>
+  head()
+#> # A tibble: 6 × 4
+#>     time frame gaze2d_x gaze2d_y
+#>    <dbl> <int>    <dbl>    <dbl>
+#> 1 0.0180     0    0.460    0.842
+#> 2 0.0381     0    0.457    0.846
+#> 3 0.0581     1    0.455    0.850
+#> 4 0.0782     1    0.445    0.873
+#> 5 0.0982     2    0.444    0.876
+#> 6 0.118      2    0.445    0.869
 ```
 
 ## Damaged files and gaps

@@ -47,6 +47,9 @@ binned <- g3_downsample(pupil, bin = 0.1)
 gaze <- g3_gaze_angles(rec$gaze)
 gaze <- g3_gaze_velocity(gaze)
 gaze <- g3_add_clock_time(gaze, rec)
+gaze <- g3_add_frame(gaze)
+
+g3_quality(epochs)
 ```
 
 The sync port functions use the pulses the glasses receive from other
@@ -88,6 +91,9 @@ as the cut-off end of an incomplete file, are skipped with a warning,
 and
 [`g3_fill_gaps()`](https://mcanzi.de/glasses3/reference/g3_fill_gaps.md)
 puts empty rows in their place.
+[`g3_quality()`](https://mcanzi.de/glasses3/reference/g3_quality.md)
+reports the share of valid samples and the longest gap in each recording
+or epoch, and
 [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
 averages the samples into time bins, for example before fitting
 generalised additive mixed models. The package leaves pupil
