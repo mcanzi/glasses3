@@ -65,7 +65,10 @@ pulses_one <- function(events, direction) {
 g3_api_events <- function(events) {
   check_df(events, c("time", "type", "data"), "events")
   e <- events |> drop_groups() |> dplyr::filter(type == "event")
-  d <- e$data |> purrr::map(\(s) if (is.na(s)) list() else jsonlite::parse_json(s))
+  d <- e$data |> dplyr::coalesce("{}") |> parse_lines()
+  if (is.null(d)) {
+    stop("The `data` column of `events` holds text that is not JSON.", call. = FALSE)
+  }
   e |>
     dplyr::select(dplyr::any_of("recording"), onset = time) |>
     dplyr::mutate(

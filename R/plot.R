@@ -51,14 +51,14 @@ plot_g3_pupil <- function(x, events = NULL, eyes = c("left", "right"),
   eyes <- match.arg(eyes, several.ok = TRUE)
   direction <- match.arg(direction)
   check_df(x, c("time", "left_pupil", "right_pupil"), "x")
-  if (nrow(x) < 2L) {
-    stop("`x` needs at least two samples to plot.", call. = FALSE)
+  if (sum(!is.na(x$time)) < 2L) {
+    stop("`x` needs at least two samples with a time to plot.", call. = FALSE)
   }
   if (all(c("epoch_time", "epoch") %in% names(x))) {
     return(plot_pupil_epochs(x, eyes, from, to, smooth))
   }
-  from <- if (is.null(from)) min(x$time) else from
-  to <- if (is.null(to)) max(x$time) else to
+  from <- if (is.null(from)) min(x$time, na.rm = TRUE) else from
+  to <- if (is.null(to)) max(x$time, na.rm = TRUE) else to
   check_window(from, to)
   d <- x |>
     dplyr::filter(time >= from, time <= to) |>
@@ -100,8 +100,8 @@ plot_g3_pupil <- function(x, events = NULL, eyes = c("left", "right"),
 }
 
 plot_pupil_epochs <- function(x, eyes, from, to, smooth = NULL) {
-  from <- if (is.null(from)) min(x$epoch_time) else from
-  to <- if (is.null(to)) max(x$epoch_time) else to
+  from <- if (is.null(from)) min(x$epoch_time, na.rm = TRUE) else from
+  to <- if (is.null(to)) max(x$epoch_time, na.rm = TRUE) else to
   check_window(from, to)
   if (!"recording" %in% names(x)) {
     x <- x |> dplyr::mutate(recording = "")
@@ -187,12 +187,12 @@ window_medians <- function(y, lo, size) {
 
 pulse_spans <- function(pulses, d, from, to) {
   if ("recording" %in% names(pulses) && "recording" %in% names(d)) {
-    ends <- d |> dplyr::summarise(end = max(time), .by = recording)
+    ends <- d |> dplyr::summarise(end = max(time, na.rm = TRUE), .by = recording)
     pulses <- pulses |>
       dplyr::filter(recording %in% d$recording) |>
       dplyr::left_join(ends, by = "recording")
   } else {
-    pulses <- pulses |> dplyr::mutate(end = max(d$time))
+    pulses <- pulses |> dplyr::mutate(end = max(d$time, na.rm = TRUE))
   }
   pulses |>
     dplyr::mutate(offset = dplyr::coalesce(offset, pmin(end, to))) |>
@@ -236,11 +236,11 @@ plot_g3_gaze <- function(x, type = c("points", "density"), from = NULL, to = NUL
   x <- x |> drop_groups()
   type <- match.arg(type)
   check_df(x, c("time", "gaze2d_x", "gaze2d_y"), "x")
-  if (nrow(x) < 2L) {
-    stop("`x` needs at least two samples to plot.", call. = FALSE)
+  if (sum(!is.na(x$time)) < 2L) {
+    stop("`x` needs at least two samples with a time to plot.", call. = FALSE)
   }
-  from <- if (is.null(from)) min(x$time) else from
-  to <- if (is.null(to)) max(x$time) else to
+  from <- if (is.null(from)) min(x$time, na.rm = TRUE) else from
+  to <- if (is.null(to)) max(x$time, na.rm = TRUE) else to
   check_window(from, to)
   d <- x |>
     dplyr::filter(time >= from, time <= to, gaze2d_x >= 0, gaze2d_x <= 1, gaze2d_y >= 0,

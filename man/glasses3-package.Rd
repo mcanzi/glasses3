@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Reads recordings made with the 'Tobii Pro Glasses 3' wearable eye tracker directly from the folder on the SD card, so 'Tobii Pro Lab' is not needed. Gaze, pupil diameter, inertial measurement unit and sync port data are read from the compressed JSON files into data frames, along with the recording metadata. Samples can be aligned with sync port pulses and cut into epochs around pulses, API events or any other onsets. Further functions fill gaps in the time series, average samples into time bins, add clock time and convert gaze directions to angles and angular velocity. Pupil diameter and gaze position can be plotted.
+Reads recordings made with the 'Tobii Pro Glasses 3' wearable eye tracker directly from the folder on the SD card, so 'Tobii Pro Lab' is not needed. Gaze, pupil diameter, inertial measurement unit and sync port data are read from the compressed JSON files into data frames, along with the recording metadata. Samples can be aligned with sync port pulses and cut into epochs around pulses, API events or any other onsets. Further functions fill gaps in the time series, summarise data quality per recording or epoch, average samples into time bins, add clock time and scene video frame numbers, and convert gaze directions to angles and angular velocity. Pupil diameter and gaze position can be plotted.
 }
 \details{
 Tobii is a trademark of Tobii AB. The package is not affiliated with or

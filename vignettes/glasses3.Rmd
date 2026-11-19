@@ -112,6 +112,13 @@ Given epochs, `plot_g3_pupil()` puts the time from the onset on the x axis. Each
 plot_g3_pupil(ep)
 ```
 
+Before analysis, `g3_quality()` shows how much data each epoch holds: the number of samples, the proportion with a gaze point and with data for each eye, and the [longest gap]{.hl} without a gaze point. Epochs with too much missing data can then be dropped.
+
+```{r}
+quality <- g3_quality(ep)
+quality
+```
+
 For models of the whole time course, such as generalised additive mixed models, `g3_downsample()` averages the samples into [time bins]{.hl}. Bins are counted from the onset, and a bin where more than half of the samples are missing is left empty. Character columns, such as a participant or condition label, are dropped unless you name them in `by`, and the groups of a grouped tibble are kept.
 
 ```{r}
@@ -154,6 +161,16 @@ velocity |>
 ```{r}
 g3_add_clock_time(rec$gaze, rec) |>
   select(time, clock_time) |>
+  head()
+```
+
+## Scene video
+
+The scene camera films at 25 frames per second. `g3_add_frame()` adds the number of the [video frame]{.hl} shown at each sample, counted from 0, so that codes made frame by frame from the video, such as areas of interest, can be joined to the samples. The first frame is taken to start with the recording. If an event visible in the video shows otherwise, set `start` to the time of the first frame.
+
+```{r}
+g3_add_frame(rec$gaze) |>
+  select(time, frame, gaze2d_x, gaze2d_y) |>
   head()
 ```
 

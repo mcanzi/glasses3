@@ -1,3 +1,35 @@
+# glasses3 (development version)
+
+## New features
+
+* `g3_quality()` summarises data quality per recording or epoch: the number
+  of samples, the proportion with a gaze point and with data for each eye,
+  and the longest time without a gaze point. It helps to find trials with
+  too much missing data.
+* `g3_add_frame()` adds the number of the scene video frame shown at each
+  sample, for matching samples to codes made from the video.
+  `g3_downsample()` keeps the frame of the first sample in each bin.
+
+## Bug fixes
+
+* `g3_fill_gaps()` no longer fails on data with duplicated rows. The sampling
+  rate, also shown by `print()` and `summary()`, is now worked out from the
+  intervals between distinct timestamps. An infinite `rate` gives an error.
+* `plot_g3_pupil()` and `plot_g3_gaze()` no longer fail when some samples have
+  no time, and `summary()` now gives the largest gap for such data.
+* A byte order mark at the start of a data file or of `recording.g3` is
+  ignored.
+* A damaged `recording.g3` gives a clear error in `read_g3_info()` and
+  `read_g3()`. `list_g3_recordings()` lists such recordings without metadata,
+  with a warning, and the readers use the usual file names for them.
+* A data file that is a ZIP archive gives a clear error.
+* Columns of the wrong type, such as a `time` column holding text, give an
+  error naming the column.
+* `g3_add_clock_time()` warns about recordings without a start time instead
+  of returning `NA` without a warning.
+* `g3_api_events()` gives a clear error when the `data` column holds text that
+  is not JSON, and is faster with many events.
+
 # glasses3 0.2.0
 
 ## Breaking changes

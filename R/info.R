@@ -21,12 +21,7 @@
 #' read_g3_info(g3_example())
 #' @export
 read_g3_info <- function(path) {
-  file <- file.path(path, "recording.g3")
-  if (!file.exists(file)) {
-    stop("No recording.g3 in ", path, ". Is this a Glasses 3 recording folder?",
-         call. = FALSE)
-  }
-  rec <- jsonlite::fromJSON(file, simplifyVector = TRUE)
+  rec <- read_recording_file(path)
   meta_name <- if (is.null(rec[["meta-folder"]])) "meta" else rec[["meta-folder"]]
   meta_dir <- file.path(path, meta_name)
   meta <- list()
@@ -47,7 +42,7 @@ read_g3_info <- function(path) {
   out <- list(
     name = rec$name %||% NA_character_,
     uuid = rec$uuid %||% NA_character_,
-    created = if (is.null(rec$created)) as.POSIXct(NA) else
+    created = if (is.null(rec$created)) as.POSIXct(NA, tz = "UTC") else
       as.POSIXct(rec$created, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
     timezone = rec$timezone %||% NA_character_,
     duration = rec$duration %||% NA_real_,
@@ -98,7 +93,9 @@ meta_text <- function(meta, key) {
 #'
 #' @return A tibble with one row per recording: `recording` (the folder
 #'   name, as used in the `recording` column by the readers), `path`, `name`,
-#'   `participant`, `created` and `duration`. Pass it to [read_g3_gaze()],
+#'   `participant`, `created` and `duration`. A recording whose
+#'   `recording.g3` cannot be read is listed with `NA` metadata and a
+#'   warning. Pass it to [read_g3_gaze()],
 #'   [read_g3_imu()] or [read_g3_events()] to read all recordings at once.
 #'
 #' @examples
@@ -119,7 +116,15 @@ list_g3_recordings <- function(path, recursive = TRUE) {
                           created = as.POSIXct(character(0), tz = "UTC"),
                           duration = numeric(0)))
   }
-  infos <- dirs |> purrr::map(read_g3_info)
+  infos <- dirs |> purrr::map(\(d) tryCatch(read_g3_info(d), error = function(e) NULL))
+  damaged <- dirs[purrr::map_lgl(infos, is.null)]
+  if (length(damaged) > 0L) {
+    warning("Could not read recording.g3 in ", paste(damaged, collapse = ", "),
+            ". These recordings are listed without metadata.", call. = FALSE)
+  }
+  infos <- infos |>
+    purrr::map(\(i) i %||% list(name = NA_character_, participant = NA_character_,
+                                created = as.POSIXct(NA, tz = "UTC"), duration = NA_real_))
   tibble::tibble(
     recording = file.path(dirs, "recording.g3") |> recording_ids(),
     path = dirs,

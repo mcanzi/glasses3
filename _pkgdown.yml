@@ -48,9 +48,11 @@ reference:
 - title: Processing
   contents:
   - g3_fill_gaps
+  - g3_quality
   - g3_gaze_angles
   - g3_gaze_velocity
   - g3_add_clock_time
+  - g3_add_frame
   - g3_downsample
 - title: Plots
   contents:

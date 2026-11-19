@@ -37,7 +37,7 @@ g3_fill_gaps <- function(x, rate = NULL) {
     stop("`g3_fill_gaps()` works on gaze data. IMU data mix sensors sampled ",
          "at different rates, so there is no single sample interval.", call. = FALSE)
   }
-  if (!is.null(rate) && (!is_number(rate) || rate <= 0)) {
+  if (!is.null(rate) && (!is_number(rate) || rate <= 0 || !is.finite(rate))) {
     stop("`rate` must be a single positive number.", call. = FALSE)
   }
   out <- by_recording(x, function(xi, id) fill_one(xi, id, rate))
@@ -83,7 +83,7 @@ fill_one <- function(xi, id, rate) {
 
 g3_columns <- function() {
   c("recording", names(empty_gaze()), "inserted", "syncport", "pulse",
-    "pulse_time", "epoch", "epoch_time", "clock_time", "left_azimuth", "right_azimuth",
+    "pulse_time", "epoch", "epoch_time", "clock_time", "frame", "left_azimuth", "right_azimuth",
     "left_elevation", "right_elevation", "vergence", "left_velocity", "right_velocity")
 }
 
@@ -216,7 +216,8 @@ vector_angle <- function(ax, ay, az, bx, by, bz) {
 #'
 #' @return `x` with a POSIXct column `clock_time` after `time`, in UTC. Use
 #'   [format()] with the `timezone` from [read_g3_info()] to show local time.
-#'   If `x` is a grouped tibble, the result has the same groups.
+#'   Recordings without a start time get `NA`, with a warning. If `x` is a
+#'   grouped tibble, the result has the same groups.
 #'
 #' @examples
 #' rec <- read_g3(g3_example())
@@ -231,7 +232,8 @@ g3_add_clock_time <- function(x, recordings) {
   d <- x |> drop_groups()
   n_x <- if ("recording" %in% names(d)) d$recording |> unique() |> length() else 1L
   if ("recording" %in% names(starts) && "recording" %in% names(d)) {
-    missing <- d$recording |> unique() |> setdiff(starts$recording)
+    known <- starts$recording[!is.na(starts$created)]
+    missing <- d$recording |> unique() |> setdiff(known)
     if (length(missing) > 0L) {
       warning("No start time for recording", if (length(missing) > 1L) "s", ": ",
               paste(missing, collapse = ", "), call. = FALSE)
@@ -242,6 +244,9 @@ g3_add_clock_time <- function(x, recordings) {
       dplyr::mutate(clock_time = .start + time, .after = time) |>
       dplyr::select(!.start)
   } else if (nrow(starts) == 1L && n_x <= 1L) {
+    if (is.na(starts$created)) {
+      warning("No start time for the recording.", call. = FALSE)
+    }
     d <- d |> dplyr::mutate(clock_time = starts$created + time, .after = time)
   } else {
     stop("`recordings` and `x` must both have a `recording` column when they ",
@@ -257,11 +262,67 @@ recording_starts <- function(recordings) {
   if (inherits(recordings, "g3_info")) {
     return(tibble::tibble(created = recordings$created))
   }
-  check_df(recordings, "created", "recordings")
+  check_df(recordings, "created", "recordings", numeric = character(0))
   if (!inherits(recordings$created, "POSIXct")) {
     stop("The `created` column of `recordings` must be POSIXct.", call. = FALSE)
   }
   recordings |> drop_groups() |> dplyr::select(dplyr::any_of("recording"), created)
+}
+
+#' Add scene video frame numbers
+#'
+#' Adds the number of the scene video frame shown at the time of each
+#' sample, so that samples can be matched to codes made frame by frame from
+#' the video, such as areas of interest.
+#'
+#' The Tobii Pro Glasses 3 Developer Guide gives the scene video as 25
+#' frames per second, and states that all data streams are timestamped by
+#' the same clock. Frame `k` is taken to start at `start + k / fps` seconds
+#' since the start of the recording. The guide does not say when the first
+#' frame is taken, so `start` defaults to 0. Check the alignment against an
+#' event visible in the video, such as a light switched on by a sync port
+#' pulse, and set `start` if needed.
+#'
+#' @param x A data frame with a `time` column, such as the output of
+#'   [read_g3_gaze()], [read_g3_imu()], [read_g3_events()] or [g3_epochs()].
+#' @param fps Frame rate of the scene video in frames per second.
+#' @param start Time of the first video frame in seconds since the start of
+#'   the recording. With several recordings in `x`, it applies to all of
+#'   them.
+#'
+#' @return `x` with an integer column `frame` after `time`. Frames are
+#'   counted from 0, as in ffmpeg and OpenCV. Samples before `start` or
+#'   without a time get `NA`. If `x` is a grouped tibble, the result has the
+#'   same groups.
+#'
+#' @examples
+#' gaze <- g3_add_frame(read_g3_gaze(g3_example()))
+#' gaze |>
+#'   dplyr::select(time, frame, gaze2d_x, gaze2d_y) |>
+#'   head()
+#'
+#' gaze |>
+#'   dplyr::summarise(gaze2d_x = mean(gaze2d_x, na.rm = TRUE),
+#'                    gaze2d_y = mean(gaze2d_y, na.rm = TRUE), .by = frame)
+#' @export
+g3_add_frame <- function(x, fps = 25, start = 0) {
+  check_df(x, "time", "x")
+  if (!is_number(fps) || !is.finite(fps) || fps <= 0) {
+    stop("`fps` must be a single positive number.", call. = FALSE)
+  }
+  if (!is_number(start) || !is.finite(start)) {
+    stop("`start` must be a single number of seconds.", call. = FALSE)
+  }
+  x |>
+    drop_groups() |>
+    dplyr::mutate(frame = video_frame(time, fps, start), .after = time) |>
+    restore_groups(x)
+}
+
+video_frame <- function(time, fps, start) {
+  f <- floor((time - start) * fps + 1e-9)
+  f[f < 0] <- NA_real_
+  as.integer(f)
 }
 
 #' Downsample to fixed time bins
@@ -290,8 +351,9 @@ recording_starts <- function(recordings) {
 #'   condition column. They are kept in the result.
 #'
 #' @return A tibble with one row per bin and group, starting with the
-#'   grouping columns. `samples` gives the number of samples in the bin. A
-#'   `pulse` column gets the pulse of the first sample in the bin. Other
+#'   grouping columns. `samples` gives the number of samples in the bin.
+#'   `pulse` and `frame` columns get the value of the first sample in the
+#'   bin. Other
 #'   numeric columns hold the mean of the available samples, and logical
 #'   columns, such as `valid`, the proportion of `TRUE` samples. All other
 #'   columns are dropped. A grouped tibble keeps its groups.
@@ -316,23 +378,9 @@ g3_downsample <- function(x, bin = 0.1, min_valid = 0.5, by = NULL) {
   if (!is_number(min_valid) || min_valid < 0 || min_valid > 1) {
     stop("`min_valid` must be a single number between 0 and 1.", call. = FALSE)
   }
-  if (!is.null(by) && (!is.character(by) || anyNA(by))) {
-    stop("`by` must be a character vector of column names.", call. = FALSE)
-  }
-  unknown <- setdiff(by, names(x))
-  if (length(unknown) > 0L) {
-    stop("`by` names columns that are not in `x`: ",
-         paste(unknown, collapse = ", "), call. = FALSE)
-  }
   tcol <- if ("epoch_time" %in% names(x)) "epoch_time" else "time"
-  if (tcol %in% by) {
-    stop("`by` cannot include the time column `", tcol, "`.", call. = FALSE)
-  }
-  groups <- c("recording", "epoch", "eye") |>
-    intersect(names(x)) |>
-    c(by, x |> dplyr::group_vars() |> setdiff(tcol)) |>
-    unique()
-  firsts <- "pulse" |> intersect(names(x)) |> setdiff(groups)
+  groups <- analysis_groups(x, by, c("recording", "epoch", "eye"), tcol)
+  firsts <- c("pulse", "frame") |> intersect(names(x)) |> setdiff(groups)
   d <- x |>
     drop_groups() |>
     dplyr::arrange(.data[[tcol]]) |>
@@ -354,6 +402,24 @@ g3_downsample <- function(x, bin = 0.1, min_valid = 0.5, by = NULL) {
     ) |>
     dplyr::select(dplyr::all_of(c(groups, tcol)), samples, dplyr::any_of(names(x))) |>
     restore_groups(x)
+}
+
+analysis_groups <- function(x, by, base, tcol) {
+  if (!is.null(by) && (!is.character(by) || anyNA(by))) {
+    stop("`by` must be a character vector of column names.", call. = FALSE)
+  }
+  unknown <- setdiff(by, names(x))
+  if (length(unknown) > 0L) {
+    stop("`by` names columns that are not in `x`: ",
+         paste(unknown, collapse = ", "), call. = FALSE)
+  }
+  if (tcol %in% by) {
+    stop("`by` cannot include the time column `", tcol, "`.", call. = FALSE)
+  }
+  base |>
+    intersect(names(x)) |>
+    c(by, x |> dplyr::group_vars() |> setdiff(tcol)) |>
+    unique()
 }
 
 bin_means <- function(values, id, samples, min_valid) {

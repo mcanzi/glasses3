@@ -14,7 +14,9 @@ list_g3_recordings(path, recursive = TRUE)
 \value{
 A tibble with one row per recording: \code{recording} (the folder
 name, as used in the \code{recording} column by the readers), \code{path}, \code{name},
-\code{participant}, \code{created} and \code{duration}. Pass it to \code{\link[=read_g3_gaze]{read_g3_gaze()}},
+\code{participant}, \code{created} and \code{duration}. A recording whose
+\code{recording.g3} cannot be read is listed with \code{NA} metadata and a
+warning. Pass it to \code{\link[=read_g3_gaze]{read_g3_gaze()}},
 \code{\link[=read_g3_imu]{read_g3_imu()}} or \code{\link[=read_g3_events]{read_g3_events()}} to read all recordings at once.
 }
 \description{

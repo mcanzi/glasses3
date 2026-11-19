@@ -2,6 +2,9 @@ read_records <- function(file) {
   if (!file.exists(file)) {
     stop("File not found: ", file, call. = FALSE)
   }
+  if (identical(readBin(file, "raw", 4L), as.raw(c(0x50, 0x4b, 0x03, 0x04)))) {
+    stop(file, " is a ZIP archive. Unzip it and read the files inside.", call. = FALSE)
+  }
   con <- gzfile(file, open = "rt")
   on.exit(close(con))
   warned <- NULL
@@ -15,6 +18,9 @@ read_records <- function(file) {
     }
   )
   lines[!validUTF8(lines)] <- "invalid UTF-8"
+  if (length(lines) > 0L) {
+    lines[1] <- drop_bom(lines[1])
+  }
   lines <- lines[stringr::str_detect(lines, "\\S")]
   if (length(lines) == 0L) {
     return(list())
@@ -92,10 +98,8 @@ resolve_file <- function(path, stream, default) {
   if (!dir.exists(path)) {
     return(path)
   }
-  rec_file <- file.path(path, "recording.g3")
-  name <- if (file.exists(rec_file)) {
-    rec_file |> jsonlite::fromJSON(simplifyVector = FALSE) |> purrr::pluck(stream, "file")
-  }
+  rec <- tryCatch(read_recording_file(path, simplify = FALSE), error = function(e) NULL)
+  name <- purrr::pluck(rec, stream, "file")
   if (!is.character(name) || length(name) != 1L) {
     name <- default
   }
@@ -106,11 +110,41 @@ is_number <- function(x) {
   is.numeric(x) && length(x) == 1L && !is.na(x)
 }
 
+read_recording_file <- function(path, simplify = TRUE) {
+  file <- file.path(path, "recording.g3")
+  if (!file.exists(file)) {
+    stop("No recording.g3 in ", path, ". Is this a Glasses 3 recording folder?",
+         call. = FALSE)
+  }
+  text <- readLines(file, warn = FALSE) |>
+    paste(collapse = "\n") |>
+    drop_bom()
+  Encoding(text) <- "UTF-8"
+  rec <- tryCatch(
+    jsonlite::fromJSON(text, simplifyVector = simplify),
+    error = function(e) NULL
+  )
+  if (!is.list(rec) || is.null(names(rec))) {
+    stop("Could not read ", file, ". The file may be damaged.", call. = FALSE)
+  }
+  rec
+}
+
+drop_bom <- function(line) {
+  bytes <- charToRaw(line)
+  if (length(bytes) < 3L || !identical(bytes[1:3], as.raw(c(0xef, 0xbb, 0xbf)))) {
+    return(line)
+  }
+  rawToChar(bytes[-(1:3)])
+}
+
 sampling_rate <- function(time) {
-  if (length(time) < 2L) {
+  steps <- time |> sort() |> diff()
+  steps <- steps[steps > 0]
+  if (length(steps) == 0L) {
     return(NA_real_)
   }
-  1 / (time |> diff() |> stats::median(na.rm = TRUE))
+  1 / stats::median(steps)
 }
 
 check_seconds <- function(x, what) {
@@ -134,10 +168,16 @@ get_gaze <- function(x) {
   x$gaze
 }
 
-check_df <- function(x, cols, what) {
+check_df <- function(x, cols, what,
+                     numeric = setdiff(cols, c("recording", "type", "direction", "data"))) {
   if (!is.data.frame(x) || !all(cols %in% names(x))) {
     stop("`", what, "` must be a data frame with columns: ",
          paste(cols, collapse = ", "), call. = FALSE)
+  }
+  wrong <- numeric |> purrr::discard(\(col) is.numeric(x[[col]]) || all(is.na(x[[col]])))
+  if (length(wrong) > 0L) {
+    stop("These columns of `", what, "` must be numeric: ",
+         paste(wrong, collapse = ", "), call. = FALSE)
   }
 }
 

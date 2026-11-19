@@ -37,6 +37,9 @@ binned <- g3_downsample(pupil, bin = 0.1)
 gaze <- g3_gaze_angles(rec$gaze)
 gaze <- g3_gaze_velocity(gaze)
 gaze <- g3_add_clock_time(gaze, rec)
+gaze <- g3_add_frame(gaze)
+
+g3_quality(epochs)
 ```
 
 The sync port functions use the pulses the glasses receive from other equipment (`direction = "in"`) by default. Epochs can also be cut at <span class="hl">API events</span> from `g3_api_events()` or at any table of onsets, whose other columns are copied to the epochs.
@@ -61,6 +64,6 @@ The data come back as <span class="hl">tibbles</span>, so they work directly wit
 
 ## Scope
 
-glasses3 reads and organises the data. Lines that cannot be read, such as the cut-off end of an incomplete file, are skipped with a warning, and `g3_fill_gaps()` puts empty rows in their place. `g3_downsample()` averages the samples into time bins, for example before fitting generalised additive mixed models. The package leaves <span class="hl">pupil preprocessing</span> to other packages. Blink removal, interpolation and baseline correction are available in packages such as [PupillometryR](https://CRAN.R-project.org/package=PupillometryR), [gazer](https://github.com/dmirman/gazer) or [eyeris](https://CRAN.R-project.org/package=eyeris).
+glasses3 reads and organises the data. Lines that cannot be read, such as the cut-off end of an incomplete file, are skipped with a warning, and `g3_fill_gaps()` puts empty rows in their place. `g3_quality()` reports the share of valid samples and the longest gap in each recording or epoch, and `g3_downsample()` averages the samples into time bins, for example before fitting generalised additive mixed models. The package leaves <span class="hl">pupil preprocessing</span> to other packages. Blink removal, interpolation and baseline correction are available in packages such as [PupillometryR](https://CRAN.R-project.org/package=PupillometryR), [gazer](https://github.com/dmirman/gazer) or [eyeris](https://CRAN.R-project.org/package=eyeris).
 
 Tobii is a trademark of Tobii AB. glasses3 is not affiliated with or endorsed by Tobii.

@@ -22,8 +22,9 @@ condition column. They are kept in the result.}
 }
 \value{
 A tibble with one row per bin and group, starting with the
-grouping columns. \code{samples} gives the number of samples in the bin. A
-\code{pulse} column gets the pulse of the first sample in the bin. Other
+grouping columns. \code{samples} gives the number of samples in the bin.
+\code{pulse} and \code{frame} columns get the value of the first sample in the
+bin. Other
 numeric columns hold the mean of the available samples, and logical
 columns, such as \code{valid}, the proportion of \code{TRUE} samples. All other
 columns are dropped. A grouped tibble keeps its groups.

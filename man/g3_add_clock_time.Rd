@@ -19,7 +19,8 @@ of \code{\link[=list_g3_recordings]{list_g3_recordings()}}, which is matched to 
 \value{
 \code{x} with a POSIXct column \code{clock_time} after \code{time}, in UTC. Use
 \code{\link[=format]{format()}} with the \code{timezone} from \code{\link[=read_g3_info]{read_g3_info()}} to show local time.
-If \code{x} is a grouped tibble, the result has the same groups.
+Recordings without a start time get \code{NA}, with a warning. If \code{x} is a
+grouped tibble, the result has the same groups.
 }
 \description{
 Adds the date and time of each sample: the start time of the recording,

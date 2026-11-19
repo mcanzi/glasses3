@@ -4,6 +4,7 @@ CMD
 EE6363
 IMU
 ORCID
+OpenCV
 POSIXct
 PupillometryR
 R's
@@ -12,6 +13,7 @@ accel
 dplyr
 eventdata
 eyeris
+ffmpeg
 g3
 gazedata
 ggplot

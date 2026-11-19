@@ -10,7 +10,8 @@
 utils::globalVariables(c(
   ".start", "bin", "created", "end", "epoch", "epoch_time", "eye", "gaze2d_x", "gaze2d_y",
   "height", "ix", "iy", "left_direction_x", "left_direction_y", "left_direction_z",
-  "left_origin_x", "left_pupil", "n", "offset", "onset", "pulse", "pupil", "recording",
-  "right_direction_x", "right_direction_y", "right_direction_z", "right_origin_x",
-  "right_pupil", "samples", "time", "type", "value", "width", "x", "y"
+  "left_origin_x", "left_pupil", "max_gap", "n", "offset", "onset", "pulse", "pupil",
+  "recording", "right_direction_x", "right_direction_y", "right_direction_z",
+  "right_origin_x", "right_pupil", "samples", "time", "type", "valid", "value", "width",
+  "x", "y"
 ))

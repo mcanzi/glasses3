@@ -43,7 +43,7 @@ summary.g3_recording <- function(object, ...) {
     valid_right = mean(g$valid_right),
     pupil_left = summary(g$left_pupil),
     pupil_right = summary(g$right_pupil),
-    max_gap = if (nrow(g) > 1L) g$time |> diff() |> max() else NA_real_,
+    max_gap = if (sum(!is.na(g$time)) > 1L) g$time |> sort() |> diff() |> max() else NA_real_,
     syncport_pulses = c("in", "out") |>
       purrr::set_names() |>
       purrr::map_int(\(d) if (is.null(object$events)) NA_integer_ else
