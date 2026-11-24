@@ -7,19 +7,23 @@
 #' preprocessing methods assume. The new rows hold `NA`, and their validity
 #' columns are `FALSE`. Values are not interpolated.
 #'
-#' With several recordings in `x`, each is filled separately. The `recording`
-#' column and columns you added yourself, such as a participant column, are
-#' copied into the new rows when they have a single value within the
-#' recording.
+#' With several recordings in `x`, each is filled separately, and so is
+#' each epoch from [g3_epochs()] and each eye in long data from
+#' [g3_pupil_long()]. The `recording`, `epoch`, `pulse` and `eye` columns
+#' and columns you added yourself, such as a participant column, are copied
+#' into the new rows when they have a single value within the recording,
+#' epoch or eye. `epoch_time` and `clock_time` are worked out for the new
+#' rows.
 #'
-#' @param x Gaze data from [read_g3_gaze()].
+#' @param x Gaze data from [read_g3_gaze()], [g3_epochs()] or
+#'   [g3_pupil_long()].
 #' @param rate Sampling rate in Hz. By default it is worked out from the
 #'   median interval between samples and set to 50 or 100 Hz when it is
 #'   within 10% of either.
 #'
-#' @return `x` with the inserted rows, sorted by time, and a logical column
-#'   `inserted` that is `TRUE` for the new rows. If `x` is a grouped tibble,
-#'   the result has the same groups.
+#' @return `x` with the inserted rows, sorted by time within each epoch,
+#'   and a logical column `inserted` that is `TRUE` for the new rows. If `x`
+#'   is a grouped tibble, the result has the same groups.
 #'
 #' @examples
 #' gaze <- read_g3_gaze(g3_example())
@@ -40,11 +44,23 @@ g3_fill_gaps <- function(x, rate = NULL) {
   if (!is.null(rate) && (!is_number(rate) || rate <= 0 || !is.finite(rate))) {
     stop("`rate` must be a single positive number.", call. = FALSE)
   }
-  out <- by_recording(x, function(xi, id) fill_one(xi, id, rate))
+  pieces <- c("epoch", "eye") |> intersect(names(x))
+  out <- by_recording(x, function(xi, id) {
+    r <- rate %||% (xi$time |> sampling_rate() |> nominal_rate())
+    if (length(pieces) == 0L) {
+      return(fill_one(xi, id, r))
+    }
+    xi |>
+      dplyr::group_by(dplyr::across(dplyr::all_of(pieces))) |>
+      dplyr::group_split() |>
+      purrr::map(\(piece) fill_one(piece, id, r)) |>
+      purrr::list_rbind() |>
+      dplyr::arrange(dplyr::across(dplyr::any_of("epoch")), time)
+  })
   out |> restore_groups(x)
 }
 
-fill_one <- function(xi, id, rate) {
+fill_one <- function(xi, id, r) {
   xi <- xi |> dplyr::arrange(time)
   if (!"inserted" %in% names(xi)) {
     xi <- xi |> dplyr::mutate(inserted = FALSE)
@@ -53,7 +69,6 @@ fill_one <- function(xi, id, rate) {
     return(xi)
   }
   dt <- diff(xi$time)
-  r <- rate %||% (xi$time |> sampling_rate() |> nominal_rate())
   k <- pmax(round(dt * r) - 1, 0)
   k[is.na(k)] <- 0
   if (!any(k > 0)) {
@@ -69,10 +84,16 @@ fill_one <- function(xi, id, rate) {
     dplyr::select(!dplyr::any_of(g3_columns())) |>
     dplyr::select(dplyr::where(\(v) is.atomic(v) && length(unique(v)) == 1L)) |>
     dplyr::slice(1)
-  new <- tibble::tibble(time = xi$time[gap] + step / (k[gap] + 1) * dt[gap]) |>
+  offset <- step / (k[gap] + 1) * dt[gap]
+  shifted <- c("epoch_time", "clock_time") |>
+    intersect(names(xi)) |>
+    purrr::set_names() |>
+    purrr::map(\(v) xi[[v]][gap] + offset)
+  new <- tibble::tibble(time = xi$time[gap] + offset) |>
     dplyr::cross_join(constant) |>
     dplyr::mutate(
       recording = id,
+      !!!shifted,
       !!!flags,
       inserted = TRUE
     )
@@ -82,9 +103,9 @@ fill_one <- function(xi, id, rate) {
 }
 
 g3_columns <- function() {
-  c("recording", names(empty_gaze()), "inserted", "syncport", "pulse",
-    "pulse_time", "epoch", "epoch_time", "clock_time", "frame", "left_azimuth", "right_azimuth",
-    "left_elevation", "right_elevation", "vergence", "left_velocity", "right_velocity")
+  c("recording", names(empty_gaze()), "inserted", "syncport", "pulse_time", "epoch_time",
+    "clock_time", "frame", "left_azimuth", "right_azimuth", "left_elevation",
+    "right_elevation", "vergence", "left_velocity", "right_velocity")
 }
 
 nominal_rate <- function(r) {
@@ -266,7 +287,16 @@ recording_starts <- function(recordings) {
   if (!inherits(recordings$created, "POSIXct")) {
     stop("The `created` column of `recordings` must be POSIXct.", call. = FALSE)
   }
-  recordings |> drop_groups() |> dplyr::select(dplyr::any_of("recording"), created)
+  starts <- recordings |>
+    drop_groups() |>
+    dplyr::select(dplyr::any_of("recording"), created) |>
+    dplyr::distinct()
+  dup <- starts$recording[duplicated(starts$recording)] |> unique()
+  if (length(dup) > 0L) {
+    stop("`recordings` gives more than one start time for recording",
+         if (length(dup) > 1L) "s", ": ", paste(dup, collapse = ", "), call. = FALSE)
+  }
+  starts
 }
 
 #' Add scene video frame numbers
@@ -334,10 +364,10 @@ video_frame <- function(time, fps, start) {
 #'
 #' Bins are counted from time 0, or from the onset for epochs from
 #' [g3_epochs()], so that the onset falls on a bin boundary. Each bin is
-#' labelled with its start time. Rows are grouped by the `recording`,
-#' `epoch` and `eye` columns where these exist, so the function works on the
-#' output of [read_g3_gaze()], [g3_add_syncport()], [g3_epochs()] and
-#' [g3_pupil_long()]. Columns named in `by` are added to these groups, and so
+#' labelled with its start time. Samples without a time are left out. Rows
+#' are grouped by the `recording`, `epoch` and `eye` columns where these
+#' exist, so the function works on the output of [read_g3_gaze()],
+#' [g3_add_syncport()], [g3_epochs()] and [g3_pupil_long()]. Columns named in `by` are added to these groups, and so
 #' are the groups of a grouped tibble.
 #'
 #' @param x Gaze data from [read_g3_gaze()], epochs from [g3_epochs()] or
@@ -383,6 +413,7 @@ g3_downsample <- function(x, bin = 0.1, min_valid = 0.5, by = NULL) {
   firsts <- c("pulse", "frame") |> intersect(names(x)) |> setdiff(groups)
   d <- x |>
     drop_groups() |>
+    dplyr::filter(!is.na(.data[[tcol]])) |>
     dplyr::arrange(.data[[tcol]]) |>
     dplyr::mutate(.bin = floor(.data[[tcol]] / bin + 1e-9) * bin) |>
     dplyr::group_by(dplyr::across(dplyr::all_of(c(groups, ".bin"))))

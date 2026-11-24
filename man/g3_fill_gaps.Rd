@@ -7,16 +7,17 @@
 g3_fill_gaps(x, rate = NULL)
 }
 \arguments{
-\item{x}{Gaze data from \code{\link[=read_g3_gaze]{read_g3_gaze()}}.}
+\item{x}{Gaze data from \code{\link[=read_g3_gaze]{read_g3_gaze()}}, \code{\link[=g3_epochs]{g3_epochs()}} or
+\code{\link[=g3_pupil_long]{g3_pupil_long()}}.}
 
 \item{rate}{Sampling rate in Hz. By default it is worked out from the
 median interval between samples and set to 50 or 100 Hz when it is
 within 10\% of either.}
 }
 \value{
-\code{x} with the inserted rows, sorted by time, and a logical column
-\code{inserted} that is \code{TRUE} for the new rows. If \code{x} is a grouped tibble,
-the result has the same groups.
+\code{x} with the inserted rows, sorted by time within each epoch,
+and a logical column \code{inserted} that is \code{TRUE} for the new rows. If \code{x}
+is a grouped tibble, the result has the same groups.
 }
 \description{
 The glasses write a line even for samples where they detect no gaze, so
@@ -27,10 +28,13 @@ preprocessing methods assume. The new rows hold \code{NA}, and their validity
 columns are \code{FALSE}. Values are not interpolated.
 }
 \details{
-With several recordings in \code{x}, each is filled separately. The \code{recording}
-column and columns you added yourself, such as a participant column, are
-copied into the new rows when they have a single value within the
-recording.
+With several recordings in \code{x}, each is filled separately, and so is
+each epoch from \code{\link[=g3_epochs]{g3_epochs()}} and each eye in long data from
+\code{\link[=g3_pupil_long]{g3_pupil_long()}}. The \code{recording}, \code{epoch}, \code{pulse} and \code{eye} columns
+and columns you added yourself, such as a participant column, are copied
+into the new rows when they have a single value within the recording,
+epoch or eye. \code{epoch_time} and \code{clock_time} are worked out for the new
+rows.
 }
 \examples{
 gaze <- read_g3_gaze(g3_example())

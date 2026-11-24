@@ -22,7 +22,9 @@
 #' @export
 read_g3_info <- function(path) {
   rec <- read_recording_file(path)
-  meta_name <- if (is.null(rec[["meta-folder"]])) "meta" else rec[["meta-folder"]]
+  pick <- function(...) purrr::pluck(rec, ...)
+  meta_name <- scalar_chr(pick("meta-folder"))
+  if (is.na(meta_name)) meta_name <- "meta"
   meta_dir <- file.path(path, meta_name)
   meta <- list()
   if (dir.exists(meta_dir)) {
@@ -40,28 +42,37 @@ read_g3_info <- function(path) {
     }
   }
   out <- list(
-    name = rec$name %||% NA_character_,
-    uuid = rec$uuid %||% NA_character_,
-    created = if (is.null(rec$created)) as.POSIXct(NA, tz = "UTC") else
-      as.POSIXct(rec$created, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
-    timezone = rec$timezone %||% NA_character_,
-    duration = rec$duration %||% NA_real_,
-    gaze_samples = rec$gaze$samples %||% NA_integer_,
-    gaze_valid_samples = rec$gaze[["valid-samples"]] %||% NA_integer_,
+    name = scalar_chr(pick("name")),
+    uuid = scalar_chr(pick("uuid")),
+    created = start_time(pick("created"), path),
+    timezone = scalar_chr(pick("timezone")),
+    duration = scalar_num(pick("duration")),
+    gaze_samples = pick("gaze", "samples") |> scalar_num() |> as.integer(),
+    gaze_valid_samples = pick("gaze", "valid-samples") |> scalar_num() |> as.integer(),
     participant = participant,
     firmware = meta_text(meta, "RuVersion"),
     recording_unit = meta_text(meta, "RuSerial"),
     head_unit = meta_text(meta, "HuSerial"),
     files = list(
-      gaze = rec$gaze$file %||% NA_character_,
-      imu = rec$imu$file %||% NA_character_,
-      events = rec$events$file %||% NA_character_,
-      scene_video = rec$scenecamera$file %||% NA_character_
+      gaze = scalar_chr(pick("gaze", "file")),
+      imu = scalar_chr(pick("imu", "file")),
+      events = scalar_chr(pick("events", "file")),
+      scene_video = scalar_chr(pick("scenecamera", "file"))
     ),
-    scene_camera = rec$scenecamera[["camera-calibration"]],
+    scene_camera = pick("scenecamera", "camera-calibration"),
     meta = meta
   )
   class(out) <- "g3_info"
+  out
+}
+
+start_time <- function(created, path) {
+  text <- scalar_chr(created)
+  out <- as.POSIXct(text, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC")
+  if (!is.na(text) && is.na(out)) {
+    warning("Could not read the start time \"", text, "\" in ",
+            file.path(path, "recording.g3"), ". `created` is `NA`.", call. = FALSE)
+  }
   out
 }
 

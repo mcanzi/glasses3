@@ -60,6 +60,7 @@ plot_g3_pupil <- function(x, events = NULL, eyes = c("left", "right"),
   from <- if (is.null(from)) min(x$time, na.rm = TRUE) else from
   to <- if (is.null(to)) max(x$time, na.rm = TRUE) else to
   check_window(from, to)
+  check_samples_in(x$time, from, to)
   d <- x |>
     dplyr::filter(time >= from, time <= to) |>
     dplyr::select(dplyr::any_of(c("recording", "time", "left_pupil", "right_pupil"))) |>
@@ -103,6 +104,7 @@ plot_pupil_epochs <- function(x, eyes, from, to, smooth = NULL) {
   from <- if (is.null(from)) min(x$epoch_time, na.rm = TRUE) else from
   to <- if (is.null(to)) max(x$epoch_time, na.rm = TRUE) else to
   check_window(from, to)
+  check_samples_in(x$epoch_time, from, to)
   if (!"recording" %in% names(x)) {
     x <- x |> dplyr::mutate(recording = "")
   }
@@ -242,6 +244,7 @@ plot_g3_gaze <- function(x, type = c("points", "density"), from = NULL, to = NUL
   from <- if (is.null(from)) min(x$time, na.rm = TRUE) else from
   to <- if (is.null(to)) max(x$time, na.rm = TRUE) else to
   check_window(from, to)
+  check_samples_in(x$time, from, to)
   d <- x |>
     dplyr::filter(time >= from, time <= to, gaze2d_x >= 0, gaze2d_x <= 1, gaze2d_y >= 0,
                   gaze2d_y <= 1)

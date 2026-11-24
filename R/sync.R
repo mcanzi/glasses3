@@ -66,7 +66,7 @@ g3_api_events <- function(events) {
   check_df(events, c("time", "type", "data"), "events")
   e <- events |> drop_groups() |> dplyr::filter(type == "event")
   d <- e$data |> dplyr::coalesce("{}") |> parse_lines()
-  if (is.null(d)) {
+  if (is.null(d) || length(d) != nrow(e)) {
     stop("The `data` column of `events` holds text that is not JSON.", call. = FALSE)
   }
   e |>
@@ -79,7 +79,7 @@ g3_api_events <- function(events) {
 }
 
 json_object <- function(data) {
-  object <- data[["object"]]
+  object <- if (is.list(data)) data[["object"]]
   if (is.null(object)) {
     return(NA_character_)
   }

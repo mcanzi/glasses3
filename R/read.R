@@ -31,6 +31,9 @@
 #' @export
 read_g3 <- function(path, data = c("gaze", "imu", "events")) {
   data <- match.arg(data, several.ok = TRUE)
+  if (!is.character(path) || anyNA(path)) {
+    stop("`path` must be the path to a recording folder.", call. = FALSE)
+  }
   if (length(path) != 1L) {
     stop("`read_g3()` reads one recording. Use `read_g3_gaze()` and the other ",
          "readers for several recordings.", call. = FALSE)
@@ -42,7 +45,7 @@ read_g3 <- function(path, data = c("gaze", "imu", "events")) {
   id <- path |> normalizePath() |> basename()
   stream <- function(name, default, parser) {
     if (!name %in% data) return(NULL)
-    path |> resolve_file(name, default) |> parser() |> add_recording(id)
+    path |> resolve_file(name, default) |> read_stream(parser, id)
   }
   out <- list(
     info = info,
@@ -159,9 +162,24 @@ read_many <- function(path, stream, default, parser) {
   files <- path |>
     g3_paths() |>
     purrr::map_chr(\(p) resolve_file(p, stream, default))
+  missing <- files[!file.exists(files)]
+  if (length(missing) > 0L) {
+    stop("File not found: ", paste(missing, collapse = ", "), call. = FALSE)
+  }
   files |>
-    purrr::map2(recording_ids(files), \(f, id) f |> parser() |> add_recording(id)) |>
+    purrr::map2(recording_ids(files), \(f, id) read_stream(f, parser, id)) |>
     purrr::list_rbind()
+}
+
+read_stream <- function(file, parser, id) {
+  out <- parser(file)
+  n <- sum(is.na(out$time))
+  if (n > 0L) {
+    warning(sprintf("%s: %d line%s no valid timestamp. `time` is `NA` for %s.",
+                    file, n, if (n == 1L) " has" else "s have", if (n == 1L) "it" else "them"),
+            call. = FALSE)
+  }
+  add_recording(out, id)
 }
 
 g3_paths <- function(path) {
@@ -172,7 +190,7 @@ g3_paths <- function(path) {
     }
     path <- path$path
   }
-  if (!is.character(path) || length(path) == 0L) {
+  if (!is.character(path) || length(path) == 0L || anyNA(path)) {
     stop("`path` must be one or more paths to recordings.", call. = FALSE)
   }
   path

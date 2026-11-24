@@ -268,3 +268,137 @@ test_that("event data that are not JSON give a clear error", {
   expect_true(is.na(api$tag))
   expect_true(is.na(api$object))
 })
+
+test_that("payloads that are not JSON objects do not stop the readers", {
+  r <- synthetic_recording(duration = 2)
+  write_lines <- function(lines, file) {
+    con <- gzfile(file.path(r, file), "w")
+    writeLines(lines, con)
+    close(con)
+  }
+  write_lines(c('{"type":"event","timestamp":1,"data":"hello"}',
+                '{"type":"event","timestamp":2,"data":5}'), "eventdata.gz")
+  write_lines(c('{"type":"gaze","timestamp":0,"data":{"gaze2d":[0.5,0.5]}}',
+                '{"type":"gaze","timestamp":0.02,"data":"x"}',
+                '{"type":"gaze","timestamp":0.04,"data":{"eyeleft":3}}'), "gazedata.gz")
+  write_lines('{"type":"imu","timestamp":0,"data":[1,2]}', "imudata.gz")
+  ev <- read_g3_events(r)
+  expect_equal(ev$data, c("\"hello\"", "5"))
+  expect_true(all(is.na(ev$direction)))
+  gaze <- read_g3_gaze(r)
+  expect_equal(gaze$valid, c(TRUE, FALSE, FALSE))
+  expect_true(all(is.na(gaze$left_pupil)))
+  expect_true(is.na(read_g3_imu(r)$accel_x))
+  api <- g3_api_events(ev)
+  expect_true(all(is.na(api$tag)))
+  expect_true(all(is.na(api$object)))
+})
+
+test_that("event data that only parse when joined give a clear error", {
+  ev <- tibble::tibble(time = 1:2, type = "event", data = c("1,2", '{"tag":"a"}'))
+  expect_error(g3_api_events(ev), "not JSON")
+})
+
+test_that("values of the wrong type in recording.g3 give NA", {
+  r <- synthetic_recording(duration = 2)
+  writeLines(paste0('{"name":{"a":1},"duration":"abc","created":"yesterday",',
+                    '"gaze":"gazedata.gz","meta-folder":["meta","x"]}'),
+             file.path(r, "recording.g3"))
+  expect_warning(info <- read_g3_info(r), "Could not read the start time \"yesterday\"")
+  expect_true(is.na(info$name))
+  expect_identical(info$duration, NA_real_)
+  expect_identical(info$gaze_samples, NA_integer_)
+  expect_true(is.na(info$files$gaze))
+  expect_equal(info$participant, "synthetic")
+  expect_output(print(info), "Duration:    NA s")
+  expect_warning(recs <- list_g3_recordings(r),
+                 "start time")
+  expect_true(is.na(recs$duration))
+  expect_equal(nrow(suppressWarnings(read_g3_gaze(r))), 200)
+})
+
+test_that("the duration is a number however recording.g3 writes it", {
+  r <- synthetic_recording(duration = 2)
+  writeLines('{"name":"x","duration":30}', file.path(r, "recording.g3"))
+  expect_identical(read_g3_info(r)$duration, 30)
+})
+
+test_that("g3_fill_gaps fills each epoch and each eye separately", {
+  rec <- read_g3(g3_example())
+  ep <- g3_epochs(rec$gaze, rec$events, before = 0.5, after = 1, direction = "out")
+  gappy <- ep[-c(10:12, 60:61), ]
+  filled <- g3_fill_gaps(gappy)
+  expect_equal(nrow(filled), nrow(ep))
+  expect_equal(sum(filled$inserted), 5)
+  expect_false(anyNA(filled$epoch))
+  expect_false(anyNA(filled$pulse))
+  expect_equal(filled$epoch, ep$epoch)
+  offsets <- filled |> dplyr::summarise(r = diff(range(time - epoch_time)), .by = epoch)
+  expect_true(all(offsets$r < 1e-9))
+  long <- g3_pupil_long(rec$gaze)
+  filled_long <- g3_fill_gaps(long[-(5:8), ])
+  expect_equal(nrow(filled_long), nrow(long))
+  expect_identical(filled_long$eye, long$eye)
+})
+
+test_that("g3_fill_gaps works out the clock time of the new rows", {
+  rec <- read_g3(g3_example())
+  x <- g3_add_clock_time(rec$gaze, rec)[-(5:6), ]
+  filled <- g3_fill_gaps(x)
+  expect_false(anyNA(filled$clock_time))
+  expect_equal(as.numeric(filled$clock_time) - filled$time,
+               rep(as.numeric(rec$info$created), nrow(filled)))
+})
+
+test_that("duplicated recordings in g3_add_clock_time are handled", {
+  rec <- read_g3(g3_example())
+  recs <- list_g3_recordings(dirname(g3_example()))
+  expect_equal(nrow(g3_add_clock_time(rec$gaze, dplyr::bind_rows(recs, recs))),
+               nrow(rec$gaze))
+  later <- recs
+  later$created <- later$created + 1
+  expect_error(g3_add_clock_time(rec$gaze, dplyr::bind_rows(recs, later)),
+               "more than one start time")
+})
+
+test_that("paths are checked before reading", {
+  expect_error(read_g3(1), "path to a recording folder")
+  expect_error(read_g3_gaze(NA_character_), "paths to recordings")
+  missing <- file.path(tempdir(), "no_such_folder")
+  expect_error(read_g3_gaze(c(g3_example(), missing)), "File not found")
+})
+
+test_that("lines without a valid timestamp give a warning", {
+  r <- synthetic_recording(duration = 2)
+  con <- gzfile(file.path(r, "gazedata.gz"), "w")
+  writeLines(c('{"type":"gaze","timestamp":0,"data":{}}',
+               '{"type":"gaze","timestamp":"abc","data":{}}',
+               '{"type":"gaze","data":{}}'), con)
+  close(con)
+  expect_warning(gaze <- read_g3_gaze(r), "2 lines have no valid timestamp")
+  expect_equal(sum(is.na(gaze$time)), 2)
+})
+
+test_that("a file without any readable line says so", {
+  r <- synthetic_recording(duration = 2)
+  con <- gzfile(file.path(r, "gazedata.gz"), "w")
+  writeLines(c("time;x", "1;2"), con)
+  close(con)
+  expect_warning(read_g3_gaze(r), "No line could be read")
+})
+
+test_that("g3_downsample leaves out samples without a time", {
+  gaze <- read_g3_gaze(g3_example())[1:10, ]
+  gaze$time[3] <- NA
+  ds <- g3_downsample(gaze, bin = 0.1)
+  expect_false(anyNA(ds$time))
+  expect_equal(sum(ds$samples), 9)
+})
+
+test_that("an empty plot window gives a clear error", {
+  rec <- read_g3(g3_example())
+  ep <- g3_epochs(rec$gaze, rec$events, before = 0.2, after = 1, direction = "out")
+  expect_error(plot_g3_pupil(rec$gaze, from = 100, to = 200), "no samples between")
+  expect_error(plot_g3_gaze(rec$gaze, from = 100, to = 200), "no samples between")
+  expect_error(plot_g3_pupil(ep, from = 5, to = 6), "no samples between")
+})

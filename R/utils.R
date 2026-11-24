@@ -38,9 +38,14 @@ read_records <- function(file) {
   }
   shown <- bad |> utils::head(5L) |> paste(collapse = ", ")
   if (length(bad) > 5L) shown <- paste0(shown, ", ...")
+  hint <- if (length(bad) == length(lines)) {
+    "No line could be read. Is this a Glasses 3 data file in UTF-8?"
+  } else {
+    "The file may be incomplete."
+  }
   warning(sprintf(
-    "%s: skipped %d damaged line%s (line %s). The file may be incomplete.",
-    file, length(bad), if (length(bad) == 1L) "" else "s", shown
+    "%s: skipped %d damaged line%s (line %s). %s",
+    file, length(bad), if (length(bad) == 1L) "" else "s", shown, hint
   ), call. = FALSE)
   parsed[purrr::map_lgl(parsed, is.list)]
 }
@@ -56,7 +61,7 @@ parse_lines <- function(lines) {
 }
 
 field <- function(x, name) {
-  lapply(x, `[[`, name)
+  lapply(x, \(e) if (is.list(e)) e[[name]] else NULL)
 }
 
 pluck_num <- function(x, name) {
@@ -104,6 +109,14 @@ resolve_file <- function(path, stream, default) {
     name <- default
   }
   file.path(path, name)
+}
+
+scalar_chr <- function(x) {
+  if (is.atomic(x) && length(x) == 1L && !is.na(x)) as.character(x) else NA_character_
+}
+
+scalar_num <- function(x) {
+  if (is.numeric(x) && length(x) == 1L) as.numeric(x) else NA_real_
 }
 
 is_number <- function(x) {
@@ -157,6 +170,12 @@ check_window <- function(from, to) {
   if (!is_number(from) || !is_number(to) || from >= to) {
     stop("`from` and `to` must be single numbers with `from` before `to`.",
          call. = FALSE)
+  }
+}
+
+check_samples_in <- function(time, from, to) {
+  if (!any(time >= from & time <= to, na.rm = TRUE)) {
+    stop("`x` has no samples between `from` and `to`.", call. = FALSE)
   }
 }
 

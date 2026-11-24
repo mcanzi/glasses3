@@ -29,6 +29,27 @@
   of returning `NA` without a warning.
 * `g3_api_events()` gives a clear error when the `data` column holds text that
   is not JSON, and is faster with many events.
+* `g3_fill_gaps()` fills each epoch from `g3_epochs()` and each eye from
+  `g3_pupil_long()` separately. It used to fill the time between epochs with
+  rows without an epoch, and gave long data one new row per missing time
+  instead of one per eye. The new rows get `epoch`, `pulse` and `eye` where
+  these are constant, and their `epoch_time` and `clock_time`.
+* Lines whose `data` is not a JSON object, such as a string or a number, no
+  longer stop the readers and `g3_api_events()`.
+* Values of the wrong type in `recording.g3`, such as a duration given as
+  text, give `NA` in `read_g3_info()` instead of breaking `print()` and
+  `list_g3_recordings()`. A start time that cannot be read gives a warning.
+  The duration is now always a double.
+* The readers warn about lines without a valid timestamp, and say when no
+  line of a file could be read.
+* The readers check all paths before reading, and `read_g3()` gives a clear
+  error for a path that is not text.
+* `g3_add_clock_time()` accepts duplicated rows in `recordings`, and gives a
+  clear error when a recording has two start times.
+* `g3_downsample()` leaves out samples without a time instead of putting
+  them in a bin of their own.
+* `plot_g3_pupil()` and `plot_g3_gaze()` give an error when `from` and `to`
+  hold no samples, instead of an empty plot.
 
 # glasses3 0.2.0
 

@@ -38,10 +38,10 @@ has to account for.
 \details{
 Bins are counted from time 0, or from the onset for epochs from
 \code{\link[=g3_epochs]{g3_epochs()}}, so that the onset falls on a bin boundary. Each bin is
-labelled with its start time. Rows are grouped by the \code{recording},
-\code{epoch} and \code{eye} columns where these exist, so the function works on the
-output of \code{\link[=read_g3_gaze]{read_g3_gaze()}}, \code{\link[=g3_add_syncport]{g3_add_syncport()}}, \code{\link[=g3_epochs]{g3_epochs()}} and
-\code{\link[=g3_pupil_long]{g3_pupil_long()}}. Columns named in \code{by} are added to these groups, and so
+labelled with its start time. Samples without a time are left out. Rows
+are grouped by the \code{recording}, \code{epoch} and \code{eye} columns where these
+exist, so the function works on the output of \code{\link[=read_g3_gaze]{read_g3_gaze()}},
+\code{\link[=g3_add_syncport]{g3_add_syncport()}}, \code{\link[=g3_epochs]{g3_epochs()}} and \code{\link[=g3_pupil_long]{g3_pupil_long()}}. Columns named in \code{by} are added to these groups, and so
 are the groups of a grouped tibble.
 }
 \examples{
