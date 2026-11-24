@@ -18,7 +18,9 @@ g3_fill_gaps(x, rate = NULL)
 - x:
 
   Gaze data from
-  [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md).
+  [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md),
+  [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) or
+  [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md).
 
 - rate:
 
@@ -28,16 +30,21 @@ g3_fill_gaps(x, rate = NULL)
 
 ## Value
 
-`x` with the inserted rows, sorted by time, and a logical column
-`inserted` that is `TRUE` for the new rows. If `x` is a grouped tibble,
-the result has the same groups.
+`x` with the inserted rows, sorted by time within each epoch, and a
+logical column `inserted` that is `TRUE` for the new rows. If `x` is a
+grouped tibble, the result has the same groups.
 
 ## Details
 
-With several recordings in `x`, each is filled separately. The
-`recording` column and columns you added yourself, such as a participant
-column, are copied into the new rows when they have a single value
-within the recording.
+With several recordings in `x`, each is filled separately, and so is
+each epoch from
+[`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) and
+each eye in long data from
+[`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md).
+The `recording`, `epoch`, `pulse` and `eye` columns and columns you
+added yourself, such as a participant column, are copied into the new
+rows when they have a single value within the recording, epoch or eye.
+`epoch_time` and `clock_time` are worked out for the new rows.
 
 ## Examples
 

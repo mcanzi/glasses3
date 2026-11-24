@@ -56,6 +56,18 @@
 <code><a href="../reference/g3_add_clock_time.html">g3_add_clock_time()</a></code> warns about recordings without a start time instead of returning <code>NA</code> without a warning.</li>
 <li>
 <code><a href="../reference/g3_api_events.html">g3_api_events()</a></code> gives a clear error when the <code>data</code> column holds text that is not JSON, and is faster with many events.</li>
+<li>
+<code><a href="../reference/g3_fill_gaps.html">g3_fill_gaps()</a></code> fills each epoch from <code><a href="../reference/g3_epochs.html">g3_epochs()</a></code> and each eye from <code><a href="../reference/g3_pupil_long.html">g3_pupil_long()</a></code> separately. It used to fill the time between epochs with rows without an epoch, and gave long data one new row per missing time instead of one per eye. The new rows get <code>epoch</code>, <code>pulse</code> and <code>eye</code> where these are constant, and their <code>epoch_time</code> and <code>clock_time</code>.</li>
+<li>Lines whose <code>data</code> is not a JSON object, such as a string or a number, no longer stop the readers and <code><a href="../reference/g3_api_events.html">g3_api_events()</a></code>.</li>
+<li>Values of the wrong type in <code>recording.g3</code>, such as a duration given as text, give <code>NA</code> in <code><a href="../reference/read_g3_info.html">read_g3_info()</a></code> instead of breaking <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="../reference/list_g3_recordings.html">list_g3_recordings()</a></code>. A start time that cannot be read gives a warning. The duration is now always a double.</li>
+<li>The readers warn about lines without a valid timestamp, and say when no line of a file could be read.</li>
+<li>The readers check all paths before reading, and <code><a href="../reference/read_g3.html">read_g3()</a></code> gives a clear error for a path that is not text.</li>
+<li>
+<code><a href="../reference/g3_add_clock_time.html">g3_add_clock_time()</a></code> accepts duplicated rows in <code>recordings</code>, and gives a clear error when a recording has two start times.</li>
+<li>
+<code><a href="../reference/g3_downsample.html">g3_downsample()</a></code> leaves out samples without a time instead of putting them in a bin of their own.</li>
+<li>
+<code><a href="../reference/plot_g3_pupil.html">plot_g3_pupil()</a></code> and <code><a href="../reference/plot_g3_gaze.html">plot_g3_gaze()</a></code> give an error when <code>from</code> and <code>to</code> hold no samples, instead of an empty plot.</li>
 </ul></div>
 </div>
     <div class="section level2">

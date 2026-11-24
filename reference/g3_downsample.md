@@ -52,8 +52,9 @@ columns are dropped. A grouped tibble keeps its groups.
 Bins are counted from time 0, or from the onset for epochs from
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md), so
 that the onset falls on a bin boundary. Each bin is labelled with its
-start time. Rows are grouped by the `recording`, `epoch` and `eye`
-columns where these exist, so the function works on the output of
+start time. Samples without a time are left out. Rows are grouped by the
+`recording`, `epoch` and `eye` columns where these exist, so the
+function works on the output of
 [`read_g3_gaze()`](https://mcanzi.de/glasses3/reference/read_g3_gaze.md),
 [`g3_add_syncport()`](https://mcanzi.de/glasses3/reference/g3_add_syncport.md),
 [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) and

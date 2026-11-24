@@ -46,6 +46,41 @@
 - [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md)
   gives a clear error when the `data` column holds text that is not
   JSON, and is faster with many events.
+- [`g3_fill_gaps()`](https://mcanzi.de/glasses3/reference/g3_fill_gaps.md)
+  fills each epoch from
+  [`g3_epochs()`](https://mcanzi.de/glasses3/reference/g3_epochs.md) and
+  each eye from
+  [`g3_pupil_long()`](https://mcanzi.de/glasses3/reference/g3_pupil_long.md)
+  separately. It used to fill the time between epochs with rows without
+  an epoch, and gave long data one new row per missing time instead of
+  one per eye. The new rows get `epoch`, `pulse` and `eye` where these
+  are constant, and their `epoch_time` and `clock_time`.
+- Lines whose `data` is not a JSON object, such as a string or a number,
+  no longer stop the readers and
+  [`g3_api_events()`](https://mcanzi.de/glasses3/reference/g3_api_events.md).
+- Values of the wrong type in `recording.g3`, such as a duration given
+  as text, give `NA` in
+  [`read_g3_info()`](https://mcanzi.de/glasses3/reference/read_g3_info.md)
+  instead of breaking [`print()`](https://rdrr.io/r/base/print.html) and
+  [`list_g3_recordings()`](https://mcanzi.de/glasses3/reference/list_g3_recordings.md).
+  A start time that cannot be read gives a warning. The duration is now
+  always a double.
+- The readers warn about lines without a valid timestamp, and say when
+  no line of a file could be read.
+- The readers check all paths before reading, and
+  [`read_g3()`](https://mcanzi.de/glasses3/reference/read_g3.md) gives a
+  clear error for a path that is not text.
+- [`g3_add_clock_time()`](https://mcanzi.de/glasses3/reference/g3_add_clock_time.md)
+  accepts duplicated rows in `recordings`, and gives a clear error when
+  a recording has two start times.
+- [`g3_downsample()`](https://mcanzi.de/glasses3/reference/g3_downsample.md)
+  leaves out samples without a time instead of putting them in a bin of
+  their own.
+- [`plot_g3_pupil()`](https://mcanzi.de/glasses3/reference/plot_g3_pupil.md)
+  and
+  [`plot_g3_gaze()`](https://mcanzi.de/glasses3/reference/plot_g3_gaze.md)
+  give an error when `from` and `to` hold no samples, instead of an
+  empty plot.
 
 ## glasses3 0.2.0
 

@@ -63,7 +63,8 @@ columns are <code>FALSE</code>. Values are not interpolated.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Gaze data from <code><a href="read_g3_gaze.html">read_g3_gaze()</a></code>.</p></dd>
+<dd><p>Gaze data from <code><a href="read_g3_gaze.html">read_g3_gaze()</a></code>, <code><a href="g3_epochs.html">g3_epochs()</a></code> or
+<code><a href="g3_pupil_long.html">g3_pupil_long()</a></code>.</p></dd>
 
 
 <dt id="arg-rate">rate<a class="anchor" aria-label="anchor" href="#arg-rate"></a></dt>
@@ -74,16 +75,19 @@ within 10% of either.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code>x</code> with the inserted rows, sorted by time, and a logical column
-<code>inserted</code> that is <code>TRUE</code> for the new rows. If <code>x</code> is a grouped tibble,
-the result has the same groups.</p>
+    <p><code>x</code> with the inserted rows, sorted by time within each epoch,
+and a logical column <code>inserted</code> that is <code>TRUE</code> for the new rows. If <code>x</code>
+is a grouped tibble, the result has the same groups.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>With several recordings in <code>x</code>, each is filled separately. The <code>recording</code>
-column and columns you added yourself, such as a participant column, are
-copied into the new rows when they have a single value within the
-recording.</p>
+    <p>With several recordings in <code>x</code>, each is filled separately, and so is
+each epoch from <code><a href="g3_epochs.html">g3_epochs()</a></code> and each eye in long data from
+<code><a href="g3_pupil_long.html">g3_pupil_long()</a></code>. The <code>recording</code>, <code>epoch</code>, <code>pulse</code> and <code>eye</code> columns
+and columns you added yourself, such as a participant column, are copied
+into the new rows when they have a single value within the recording,
+epoch or eye. <code>epoch_time</code> and <code>clock_time</code> are worked out for the new
+rows.</p>
     </div>
 
     <div class="section level2">
